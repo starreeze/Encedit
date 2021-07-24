@@ -1,16 +1,15 @@
 #include "encript.h"
-#include <random>
+
+int key = 13570684;
 
 void encript(QString &s)
 {
-	srand(13570684);
 	for (int i = 0; i < s.length(); ++i)
-		s[i] = (QChar)(s[i].unicode() + rand());
+		s[i] = (QChar)(s[i].unicode() + (i + key));
 }
 
 void decript(QString &s)
 {
-	srand(13570684);
 	for (int i = 0; i < s.length(); ++i)
-		s[i] = (QChar)(s[i].unicode() - rand());
+		s[i] = (QChar)(s[i].unicode() - (i + key));
 }

@@ -28,5 +28,7 @@ Makefile*
 *.autosave
 
 .vscode
-img
 test
+.history
+qPad
+bin

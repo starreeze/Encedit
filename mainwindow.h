@@ -16,6 +16,8 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    void receive_args(int argc, char *argv[]);
+    void display(QString filename);
 
 private slots:
     void on_actionNew_triggered();
