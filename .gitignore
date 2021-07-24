@@ -17,7 +17,7 @@
 *.pro.user
 *.pro.user.*
 *.moc
-moc_*.cpp
+moc_*
 qrc_*.cpp
 ui_*.h
 Makefile*
@@ -26,3 +26,7 @@ Makefile*
 # QtCreator
 
 *.autosave
+
+.vscode
+img
+test
