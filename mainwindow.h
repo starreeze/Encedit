@@ -17,30 +17,29 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     void receive_args(int argc, char *argv[]);
-    void display(QString filename);
 
 private slots:
     void on_actionNew_triggered();
-
     void on_actionOpen_triggered();
-
     void on_actionSave_triggered();
-
     void on_actionSave_As_triggered();
-
     void on_actionCopy_triggered();
-
     void on_actionPaste_triggered();
-
     void on_actionCut_triggered();
-
     void on_actionUndo_triggered();
-
     void on_actionRedo_triggered();
+    void on_text_modified();
 
 private:
     Ui::MainWindow *ui;
     QString mFilename;
+    bool dirty = false;
+    QMetaObject::Connection connection;
+    void set_filename(QString filename);
+    void display(QString filename);
+    void set_dirty(bool val);
+    void close_current();
+    void save_current(bool saveClean = false);
 };
 
 #endif // MAINWINDOW_H

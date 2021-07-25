@@ -5,15 +5,14 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    this->setCentralWidget(ui->textEdit);
-    this->setWindowTitle("qPad");
-    this->showMaximized();
+    setCentralWidget(ui->textEdit);
+    setWindowTitle("EncEdit");
+    showMaximized();
     ui->textEdit->setFont(QFont("Consolas", 20));
 }
 
 MainWindow::~MainWindow()
 {
-    on_actionSave_triggered();
     QFile history(".history");
     if (history.open(QFile::WriteOnly | QFile::Text))
     {
@@ -21,6 +20,7 @@ MainWindow::~MainWindow()
         out << mFilename;
         history.close();
     }
+    close_current();
     delete ui;
 }
 
@@ -38,6 +38,8 @@ void MainWindow::receive_args(int argc, char *argv[])
             history.close();
             display(filename);
         }
+        else
+            on_actionNew_triggered();
     }
 }
 
@@ -47,11 +49,7 @@ void MainWindow::display(QString filename)
     QFile sFile(filename);
     if (sFile.open(QFile::ReadOnly | QFile::Text))
     {
-        mFilename = filename;
-        int i = filename.length();
-        while (i && filename[--i] != '/')
-            ;
-        this->setWindowTitle(filename.mid(i + 1) + " - qPad");
+        set_filename(filename);
         QTextStream in(&sFile);
         QString text = in.readAll();
         debug = text.toStdString();
@@ -59,37 +57,33 @@ void MainWindow::display(QString filename)
         decript(text);
         debug = text.toStdString();
         ui->textEdit->setPlainText(text);
+        connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
     }
+    else
+        on_actionNew_triggered();
 }
 
 void MainWindow::on_actionNew_triggered()
 {
-    on_actionSave_triggered();
-    mFilename = "";
+    close_current();
+    connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
+    set_filename("");
     ui->textEdit->setPlainText("");
 }
 
 void MainWindow::on_actionOpen_triggered()
 {
-    on_actionSave_triggered();
     QString file = QFileDialog::getOpenFileName(this, "Open a file");
     if (!file.isEmpty())
+    {
+        close_current();
         display(file);
+    }
 }
 
 void MainWindow::on_actionSave_triggered()
 {
-    QString text = ui->textEdit->toPlainText();
-    QFile sFile(mFilename);
-    if (sFile.open(QFile::WriteOnly | QFile::Text))
-    {
-        QTextStream out(&sFile);
-        encript(text);
-        out << text;
-        sFile.close();
-    }
-    else if (!text.isEmpty())
-        on_actionSave_As_triggered();
+    save_current();
 }
 
 void MainWindow::on_actionSave_As_triggered()
@@ -97,8 +91,8 @@ void MainWindow::on_actionSave_As_triggered()
     QString file = QFileDialog::getSaveFileName(this, "Save as");
     if (!file.isEmpty())
     {
-        mFilename = file;
-        on_actionSave_triggered();
+        set_filename(file);
+        save_current(true);
     }
 }
 
@@ -125,4 +119,67 @@ void MainWindow::on_actionUndo_triggered()
 void MainWindow::on_actionRedo_triggered()
 {
     ui->textEdit->redo();
+}
+
+void MainWindow::on_text_modified()
+{
+    set_dirty(true);
+}
+
+void MainWindow::set_filename(QString filename)
+{
+    printf("set filename %s\n", filename.toStdString().c_str());
+    mFilename = filename;
+    int i = filename.length();
+    if (!i)
+        filename = "new*";
+    while (i && filename[--i] != '/')
+        ;
+    setWindowTitle(filename.mid(i + (filename[i] == '/')) + " - EncEdit");
+}
+
+void MainWindow::set_dirty(bool val)
+{
+    if (val == dirty)
+        return;
+    if (val)
+    {
+        dirty = true;
+        QString title = windowTitle();
+        if (title.back() != '*')
+            setWindowTitle(title + "*");
+    }
+    else
+    {
+        dirty = false;
+        QString title = windowTitle();
+        if (title.back() == '*')
+            setWindowTitle(title.mid(0, title.length() - 1));
+    }
+}
+
+void MainWindow::close_current()
+{
+    save_current();
+    disconnect(connection);
+}
+
+void MainWindow::save_current(bool saveClean)
+{
+    if (!dirty && !saveClean)
+        return;
+    QString text = ui->textEdit->toPlainText();
+    QFile sFile(mFilename);
+    if (sFile.open(QFile::WriteOnly | QFile::Text))
+    {
+        QTextStream out(&sFile);
+        encript(text);
+        out << text;
+        sFile.close();
+        set_dirty(false);
+    }
+    else if (!text.isEmpty())
+        on_actionSave_As_triggered();
+    else
+        set_dirty(false);
 }
