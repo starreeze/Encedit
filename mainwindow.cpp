@@ -43,6 +43,46 @@ void MainWindow::receive_args(int argc, char *argv[])
     }
 }
 
+void MainWindow::keyPressEvent(QKeyEvent *keyEvent)
+{
+    switch (keyEvent->key())
+    {
+    case Qt::Key_Control:
+        ctrl_pressed = true;
+        break;
+    case Qt::Key_S:
+        if (ctrl_pressed)
+        {
+            if (shift_pressed)
+                on_actionSave_As_triggered();
+            else
+                on_actionSave_triggered();
+        }
+        break;
+    case Qt::Key_N:
+        if (ctrl_pressed)
+            on_actionNew_triggered();
+        break;
+    case Qt::Key_O:
+        if (ctrl_pressed)
+            on_actionOpen_triggered();
+        break;
+    }
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent *keyEvent)
+{
+    switch (keyEvent->key())
+    {
+    case Qt::Key_Control:
+        ctrl_pressed = false;
+        break;
+    case Qt::Key_Shift:
+        shift_pressed = false;
+        break;
+    }
+}
+
 void MainWindow::display(QString filename)
 {
     std::string debug = filename.toStdString();

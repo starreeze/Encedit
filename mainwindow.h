@@ -4,6 +4,7 @@
 #include <QtGui>
 #include <QtCore>
 #include <QFileDialog>
+#include <QKeyEvent>
 namespace Ui
 {
     class MainWindow;
@@ -17,6 +18,8 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     void receive_args(int argc, char *argv[]);
+    void keyPressEvent(QKeyEvent *keyEvent);
+    void keyReleaseEvent(QKeyEvent *keyEvent);
 
 private slots:
     void on_actionNew_triggered();
@@ -33,7 +36,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QString mFilename;
-    bool dirty = false;
+    bool dirty = false, ctrl_pressed = false, shift_pressed = false;
     QMetaObject::Connection connection;
     void set_filename(QString filename);
     void display(QString filename);
