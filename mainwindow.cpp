@@ -17,7 +17,8 @@ MainWindow::~MainWindow()
     if (history.open(QFile::WriteOnly | QFile::Text))
     {
         QTextStream out(&history);
-        out << mFilename;
+        out << mFilename << '\n'
+            << ui->textEdit->textCursor().position();
         history.close();
     }
     close_current();
@@ -34,9 +35,14 @@ void MainWindow::receive_args(int argc, char *argv[])
         if (history.open(QFile::ReadOnly | QFile::Text))
         {
             QTextStream in(&history);
-            QString filename = in.readAll();
+            QString filename;
+            int pos;
+            in >> filename >> pos;
             history.close();
             display(filename);
+            auto cursor = ui->textEdit->textCursor();
+            cursor.setPosition(pos);
+            ui->textEdit->setTextCursor(cursor);
         }
         else
             on_actionNew_triggered();
@@ -168,7 +174,6 @@ void MainWindow::on_text_modified()
 
 void MainWindow::set_filename(QString filename)
 {
-    printf("set filename %s\n", filename.toStdString().c_str());
     mFilename = filename;
     int i = filename.length();
     if (!i)
