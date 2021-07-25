@@ -7,7 +7,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->setupUi(this);
     setCentralWidget(ui->textEdit);
     setWindowTitle("EncEdit");
-    showMaximized();
     ui->textEdit->setFont(QFont("Consolas", 20));
 }
 

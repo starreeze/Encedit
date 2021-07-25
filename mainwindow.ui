@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>1200</width>
+    <height>900</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,10 +17,10 @@
    <widget class="QTextEdit" name="textEdit">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>20</y>
-      <width>256</width>
-      <height>192</height>
+      <x>0</x>
+      <y>0</y>
+      <width>1200</width>
+      <height>850</height>
      </rect>
     </property>
    </widget>
@@ -30,8 +30,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>400</width>
-     <height>25</height>
+     <width>1200</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -75,7 +75,6 @@
    <addaction name="actionUndo"/>
    <addaction name="actionRedo"/>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
   <action name="actionNew">
    <property name="icon">
     <iconset resource="AppResources.qrc">
