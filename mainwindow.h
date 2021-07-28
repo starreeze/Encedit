@@ -5,6 +5,7 @@
 #include <QtCore>
 #include <QFileDialog>
 #include <QKeyEvent>
+#include "config.h"
 namespace Ui
 {
     class MainWindow;
@@ -35,7 +36,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QString mFilename;
+    Config config;
     bool dirty = false, ctrl_pressed = false, shift_pressed = false;
     QMetaObject::Connection connection;
     void set_filename(QString filename);

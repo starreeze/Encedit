@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->setupUi(this);
     setCentralWidget(ui->textEdit);
     setWindowTitle("EncEdit");
-    ui->textEdit->setFont(QFont("Consolas", 20));
+    ui->textEdit->setFont(QFont("Consolas", config.font_size));
 }
 
 MainWindow::~MainWindow()
@@ -16,8 +16,8 @@ MainWindow::~MainWindow()
     if (history.open(QFile::WriteOnly | QFile::Text))
     {
         QTextStream out(&history);
-        out << mFilename << '\n'
-            << ui->textEdit->textCursor().position();
+        config.cursor_pos = ui->textEdit->textCursor().position();
+        out << config;
         history.close();
     }
     close_current();
@@ -34,14 +34,13 @@ void MainWindow::receive_args(int argc, char *argv[])
         if (history.open(QFile::ReadOnly | QFile::Text))
         {
             QTextStream in(&history);
-            QString filename;
-            int pos;
-            in >> filename >> pos;
+            in >> config;
             history.close();
-            display(filename);
+            display(config.file_path);
             auto cursor = ui->textEdit->textCursor();
-            cursor.setPosition(pos);
+            cursor.setPosition(config.cursor_pos);
             ui->textEdit->setTextCursor(cursor);
+            ui->textEdit->setFont(QFont("Consolas", config.font_size));
         }
         else
             on_actionNew_triggered();
@@ -71,6 +70,20 @@ void MainWindow::keyPressEvent(QKeyEvent *keyEvent)
     case Qt::Key_O:
         if (ctrl_pressed)
             on_actionOpen_triggered();
+        break;
+    case Qt::Key_Equal:
+        if (ctrl_pressed)
+        {
+            config.font_size += 2;
+            ui->textEdit->setFont(QFont("Consolas", config.font_size));
+        }
+        break;
+    case Qt::Key_Minus:
+        if (ctrl_pressed)
+        {
+            config.font_size -= 2;
+            ui->textEdit->setFont(QFont("Consolas", config.font_size));
+        }
         break;
     }
 }
@@ -173,7 +186,7 @@ void MainWindow::on_text_modified()
 
 void MainWindow::set_filename(QString filename)
 {
-    mFilename = filename;
+    config.file_path = filename;
     int i = filename.length();
     if (!i)
         filename = "new*";
@@ -213,7 +226,7 @@ void MainWindow::save_current(bool saveClean)
     if (!dirty && !saveClean)
         return;
     QString text = ui->textEdit->toPlainText();
-    QFile sFile(mFilename);
+    QFile sFile(config.file_path);
     if (sFile.open(QFile::WriteOnly | QFile::Text))
     {
         QTextStream out(&sFile);
