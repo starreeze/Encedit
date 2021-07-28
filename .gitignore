@@ -28,7 +28,7 @@ Makefile*
 *.autosave
 
 .vscode
-test
+*.enc
 .history
 encedit
 bin

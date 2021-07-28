@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "encript.h"
+#include <QInputDialog>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -105,17 +107,21 @@ void MainWindow::display(QString filename)
 {
     std::string debug = filename.toStdString();
     QFile sFile(filename);
-    if (sFile.open(QFile::ReadOnly | QFile::Text))
+    if (sFile.open(QFile::ReadOnly))
     {
         set_filename(filename);
-        QTextStream in(&sFile);
-        QString text = in.readAll();
-        debug = text.toStdString();
+        QByteArray content = sFile.readAll();
         sFile.close();
-        decript(text);
-        debug = text.toStdString();
-        ui->textEdit->setPlainText(text);
-        connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
+        bool ok;
+        config.password = QInputDialog::getInt(this, "password", QString("Please enter digit password for encripted document%1:").arg(config.file_path), 0, -2147483648, 2147483647, 1, &ok);
+        if (ok)
+        {
+            QString text = decript(content, config.password);
+            ui->textEdit->setPlainText(text);
+            connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
+        }
+        else
+            on_actionNew_triggered();
     }
     else
         on_actionNew_triggered();
@@ -131,7 +137,7 @@ void MainWindow::on_actionNew_triggered()
 
 void MainWindow::on_actionOpen_triggered()
 {
-    QString file = QFileDialog::getOpenFileName(this, "Open a file");
+    QString file = QFileDialog::getOpenFileName(this, "Open a file", "", "Encripted text files (*.enc)");
     if (!file.isEmpty())
     {
         close_current();
@@ -146,10 +152,20 @@ void MainWindow::on_actionSave_triggered()
 
 void MainWindow::on_actionSave_As_triggered()
 {
-    QString file = QFileDialog::getSaveFileName(this, "Save as");
+    QString file = QFileDialog::getSaveFileName(this, "Save as", "", "Encripted text files (*.enc)");
     if (!file.isEmpty())
     {
         set_filename(file);
+        int confirm_password;
+        while (true)
+        {
+            config.password = QInputDialog::getInt(this, "password", QString("Please enter a digit password to encript document %1:").arg(config.file_path));
+            confirm_password = QInputDialog::getInt(this, "password", "Please confirm your password:");
+            if (config.password != confirm_password)
+                QMessageBox::warning(this, "password", "Password mismatch!");
+            else
+                break;
+        }
         save_current(true);
     }
 }
@@ -227,11 +243,9 @@ void MainWindow::save_current(bool saveClean)
         return;
     QString text = ui->textEdit->toPlainText();
     QFile sFile(config.file_path);
-    if (sFile.open(QFile::WriteOnly | QFile::Text))
+    if (sFile.open(QFile::WriteOnly))
     {
-        QTextStream out(&sFile);
-        encript(text);
-        out << text;
+        sFile.write(encript(text, config.password));
         sFile.close();
         set_dirty(false);
     }

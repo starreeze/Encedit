@@ -7,9 +7,7 @@
 struct Config
 {
 	QString file_path;
-	int cursor_pos = 0, font_size = 20;
-	Config() {}
-	Config(const QString &current_file_path, int cursor_position, int font_point_size);
+	int cursor_pos = 0, font_size = 20, password;
 };
 
 QTextStream &operator<<(QTextStream &out, const Config &conf);

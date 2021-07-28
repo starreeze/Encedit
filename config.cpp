@@ -1,7 +1,5 @@
 #include "config.h"
 
-Config::Config(const QString &current_file_path, int cursor_position, int font_point_size) : file_path(current_file_path), cursor_pos(cursor_position), font_size(font_point_size) {}
-
 QTextStream &operator<<(QTextStream &out, const Config &conf)
 {
 	out << conf.file_path << '\n'
