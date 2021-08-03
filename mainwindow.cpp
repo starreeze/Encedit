@@ -4,19 +4,16 @@
 #include <QInputDialog>
 #include <QMessageBox>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
-{
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     setCentralWidget(ui->textEdit);
     setWindowTitle("EncEdit");
     ui->textEdit->setFont(QFont("Consolas", config.font_size));
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     QFile history(".history");
-    if (history.open(QFile::WriteOnly | QFile::Text))
-    {
+    if (history.open(QFile::WriteOnly | QFile::Text)) {
         QTextStream out(&history);
         config.cursor_pos = ui->textEdit->textCursor().position();
         out << config;
@@ -26,15 +23,12 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::receive_args(int argc, char *argv[])
-{
+void MainWindow::receive_args(int argc, char* argv[]) {
     if (argc == 2)
         display(argv[1]);
-    else
-    {
+    else {
         QFile history(".history");
-        if (history.open(QFile::ReadOnly | QFile::Text))
-        {
+        if (history.open(QFile::ReadOnly | QFile::Text)) {
             QTextStream in(&history);
             in >> config;
             history.close();
@@ -49,16 +43,13 @@ void MainWindow::receive_args(int argc, char *argv[])
     }
 }
 
-void MainWindow::keyPressEvent(QKeyEvent *keyEvent)
-{
-    switch (keyEvent->key())
-    {
+void MainWindow::keyPressEvent(QKeyEvent* keyEvent) {
+    switch (keyEvent->key()) {
     case Qt::Key_Control:
         ctrl_pressed = true;
         break;
     case Qt::Key_S:
-        if (ctrl_pressed)
-        {
+        if (ctrl_pressed) {
             if (shift_pressed)
                 on_actionSave_As_triggered();
             else
@@ -74,15 +65,13 @@ void MainWindow::keyPressEvent(QKeyEvent *keyEvent)
             on_actionOpen_triggered();
         break;
     case Qt::Key_Equal:
-        if (ctrl_pressed)
-        {
+        if (ctrl_pressed) {
             config.font_size += 2;
             ui->textEdit->setFont(QFont("Consolas", config.font_size));
         }
         break;
     case Qt::Key_Minus:
-        if (ctrl_pressed)
-        {
+        if (ctrl_pressed) {
             config.font_size -= 2;
             ui->textEdit->setFont(QFont("Consolas", config.font_size));
         }
@@ -90,10 +79,8 @@ void MainWindow::keyPressEvent(QKeyEvent *keyEvent)
     }
 }
 
-void MainWindow::keyReleaseEvent(QKeyEvent *keyEvent)
-{
-    switch (keyEvent->key())
-    {
+void MainWindow::keyReleaseEvent(QKeyEvent* keyEvent) {
+    switch (keyEvent->key()) {
     case Qt::Key_Control:
         ctrl_pressed = false;
         break;
@@ -103,19 +90,16 @@ void MainWindow::keyReleaseEvent(QKeyEvent *keyEvent)
     }
 }
 
-void MainWindow::display(QString filename)
-{
+void MainWindow::display(QString filename) {
     std::string debug = filename.toStdString();
     QFile sFile(filename);
-    if (sFile.open(QFile::ReadOnly))
-    {
+    if (sFile.open(QFile::ReadOnly)) {
         set_filename(filename);
         QByteArray content = sFile.readAll();
         sFile.close();
         bool ok;
-        config.password = QInputDialog::getInt(this, "password", QString("Please enter digit password for encripted document%1:").arg(config.file_path), 0, -2147483648, 2147483647, 1, &ok);
-        if (ok)
-        {
+        config.password = QInputDialog::getInt(this, "password", QString("Password for encripted document %1:").arg(config.file_path), 0, -2147483648, 2147483647, 1, &ok);
+        if (ok) {
             QString text = decript(content, config.password);
             ui->textEdit->setPlainText(text);
             connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
@@ -127,39 +111,33 @@ void MainWindow::display(QString filename)
         on_actionNew_triggered();
 }
 
-void MainWindow::on_actionNew_triggered()
-{
+void MainWindow::on_actionNew_triggered() {
     close_current();
     connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
     set_filename("");
     ui->textEdit->setPlainText("");
+    set_dirty(true);
 }
 
-void MainWindow::on_actionOpen_triggered()
-{
-    QString file = QFileDialog::getOpenFileName(this, "Open a file", "", "Encripted text files (*.enc)");
-    if (!file.isEmpty())
-    {
+void MainWindow::on_actionOpen_triggered() {
+    QString file = QFileDialog::getOpenFileName(this, "Open a file", "", "Encripted text files(*.enc)");
+    if (!file.isEmpty()) {
         close_current();
         display(file);
     }
 }
 
-void MainWindow::on_actionSave_triggered()
-{
+void MainWindow::on_actionSave_triggered() {
     save_current();
 }
 
-void MainWindow::on_actionSave_As_triggered()
-{
+void MainWindow::on_actionSave_As_triggered() {
     QString file = QFileDialog::getSaveFileName(this, "Save as", "", "Encripted text files (*.enc)");
-    if (!file.isEmpty())
-    {
+    if (!file.isEmpty()) {
         set_filename(file);
         int confirm_password;
-        while (true)
-        {
-            config.password = QInputDialog::getInt(this, "password", QString("Please enter a digit password to encript document %1:").arg(config.file_path));
+        while (true) {
+            config.password = QInputDialog::getInt(this, "password", QString("A digit password to encript document %1:").arg(config.file_path));
             confirm_password = QInputDialog::getInt(this, "password", "Please confirm your password:");
             if (config.password != confirm_password)
                 QMessageBox::warning(this, "password", "Password mismatch!");
@@ -170,38 +148,31 @@ void MainWindow::on_actionSave_As_triggered()
     }
 }
 
-void MainWindow::on_actionCopy_triggered()
-{
+void MainWindow::on_actionCopy_triggered() {
     ui->textEdit->copy();
 }
 
-void MainWindow::on_actionPaste_triggered()
-{
+void MainWindow::on_actionPaste_triggered() {
     ui->textEdit->paste();
 }
 
-void MainWindow::on_actionCut_triggered()
-{
+void MainWindow::on_actionCut_triggered() {
     ui->textEdit->cut();
 }
 
-void MainWindow::on_actionUndo_triggered()
-{
+void MainWindow::on_actionUndo_triggered() {
     ui->textEdit->undo();
 }
 
-void MainWindow::on_actionRedo_triggered()
-{
+void MainWindow::on_actionRedo_triggered() {
     ui->textEdit->redo();
 }
 
-void MainWindow::on_text_modified()
-{
+void MainWindow::on_text_modified() {
     set_dirty(true);
 }
 
-void MainWindow::set_filename(QString filename)
-{
+void MainWindow::set_filename(QString filename) {
     config.file_path = filename;
     int i = filename.length();
     if (!i)
@@ -211,19 +182,16 @@ void MainWindow::set_filename(QString filename)
     setWindowTitle(filename.mid(i + (filename[i] == '/')) + " - EncEdit");
 }
 
-void MainWindow::set_dirty(bool val)
-{
+void MainWindow::set_dirty(bool val) {
     if (val == dirty)
         return;
-    if (val)
-    {
+    if (val) {
         dirty = true;
         QString title = windowTitle();
         if (title.back() != '*')
             setWindowTitle(title + "*");
     }
-    else
-    {
+    else {
         dirty = false;
         QString title = windowTitle();
         if (title.back() == '*')
@@ -231,26 +199,30 @@ void MainWindow::set_dirty(bool val)
     }
 }
 
-void MainWindow::close_current()
-{
-    save_current();
+void MainWindow::close_current() {
     disconnect(connection);
+    if (dirty && !ui->textEdit->toPlainText().isEmpty()) {
+        auto response = QMessageBox::question(this, "Save", "Save your document?");
+        if (response == QMessageBox::Yes)
+            save_current();
+    }
+    set_dirty(false);
 }
 
-void MainWindow::save_current(bool saveClean)
-{
+void MainWindow::save_current(bool saveClean) {
     if (!dirty && !saveClean)
         return;
     QString text = ui->textEdit->toPlainText();
     QFile sFile(config.file_path);
-    if (sFile.open(QFile::WriteOnly))
-    {
+    if (sFile.open(QFile::WriteOnly)) {
         sFile.write(encript(text, config.password));
         sFile.close();
         set_dirty(false);
     }
-    else if (!text.isEmpty())
-        on_actionSave_As_triggered();
+    // else if (!text.isEmpty())
+    //     on_actionSave_As_triggered();
+    // else
+    //     set_dirty(false);
     else
-        set_dirty(false);
+        on_actionSave_As_triggered();
 }
