@@ -16,11 +16,11 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QWidget* parent = 0);
     ~MainWindow();
-    void receive_args(int argc, char *argv[]);
-    void keyPressEvent(QKeyEvent *keyEvent);
-    void keyReleaseEvent(QKeyEvent *keyEvent);
+    void receive_args(int argc, char* argv[]);
+    void keyPressEvent(QKeyEvent* keyEvent);
+    void keyReleaseEvent(QKeyEvent* keyEvent);
 
 private slots:
     void on_actionNew_triggered();
@@ -33,14 +33,16 @@ private slots:
     void on_actionUndo_triggered();
     void on_actionRedo_triggered();
     void on_text_modified();
+    void auto_save();
 
 private:
-    Ui::MainWindow *ui;
+    Ui::MainWindow* ui;
     Config config;
     bool dirty = false, ctrl_pressed = false, shift_pressed = false;
-    QMetaObject::Connection connection;
+    QMetaObject::Connection text_connection;
+    QTimer* timer;
     void set_filename(QString filename);
-    void display(QString filename);
+    void display(QString filename, bool updateFilename = true);
     void set_dirty(bool val);
     void close_current();
     void save_current(bool saveClean = false);

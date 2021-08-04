@@ -2,8 +2,8 @@
 #define ENCRIPT_H
 #include <QString>
 
-QByteArray encript(QString& s, int key);
+QByteArray encript(QString& s, uint64_t key);
 
-QString decript(const QByteArray& s, int key);
+QString decript(const QByteArray& s, uint64_t key);
 
 #endif

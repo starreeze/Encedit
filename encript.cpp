@@ -1,34 +1,38 @@
 #include "encript.h"
 
-uint next;
-uint myrand() {
+uint64_t next;
+uint64_t myrand() {
 	return next = next * 1103515245 + 12345;
 }
 
-QByteArray encript(QString& s, int key) {
+QByteArray encript(QString& s, uint64_t key) {
 	next = key;
-	if (s.length() % 2)
-		s.append('\n');
+	while (s.length() % 4)
+		s.append(' ');
 	QByteArray res(s.length() * 2, 0);
-	for (int i = 0; i < s.length() / 2; ++i) {
-		uint word = s[2 * i].unicode();
-		word |= (uint)s[2 * i + 1].unicode() << 16;
+	for (int i = 0; i < s.length() / 4; ++i) {
+		uint64_t word = 0;
+		for (int j = 0; j < 4; ++j)
+			word |= (uint64_t)(s[4 * i + j].unicode()) << (16 * j);
 		word ^= myrand();
-		res[4 * i] = word;
-		res[4 * i + 1] = word >> 8;
-		res[4 * i + 2] = word >> 16;
-		res[4 * i + 3] = word >> 24;
+		for (int j = 0; j < 8; ++j)
+			res[8 * i + j] = (uint8_t)(word >> (8 * j));
 	}
 	return res;
 }
 
-QString decript(const QByteArray& s, int key) {
+QString decript(const QByteArray& s, uint64_t key) {
 	next = key;
 	QString res(s.length() / 2, 0);
-	for (int i = 0; i < res.length() / 2; ++i) {
-		uint word = ((s[4 * i] & 0xff) | (s[4 * i + 1] & 0xff) << 8 | (s[4 * i + 2] & 0xff) << 16 | (s[4 * i + 3] & 0xff) << 24) ^ myrand();
-		res[2 * i] = word;
-		res[2 * i + 1] = word >> 16;
+	for (int i = 0; i < res.length() / 4; ++i) {
+		uint64_t word = 0;
+		for (int j = 0; j < 8; ++j)
+			word |= (uint64_t)(s[8 * i + j] & 0xff) << (8 * j);
+		word ^= myrand();
+		for (int j = 0; j < 4; ++j)
+			res[4 * i + j] = (uint16_t)(word >> (16 * j));
 	}
-	return res;
+	int idx = res.length();
+	while (res[--idx] == ' ');
+	return res.mid(0, idx + 1);
 }
