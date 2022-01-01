@@ -13,15 +13,20 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
+        directory.cpp \
         mainwindow.cpp\
         encript.cpp\
-        config.cpp
+        config.cpp\
+        io.cpp
 
 HEADERS  += mainwindow.h\
+        directory.h \
         encript.h\
-        config.h
+        config.h\
+        io.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    directory.ui
 
 RESOURCES += \
     AppResources.qrc

@@ -5,7 +5,8 @@ uint64_t myrand() {
 	return next = next * 1103515245 + 12345;
 }
 
-QByteArray encript(QString& s, uint64_t key) {
+QByteArray encript(const QString& str, uint64_t key) {
+	QString s(str);
 	next = key;
 	while (s.length() % 4)
 		s.append(' ');
