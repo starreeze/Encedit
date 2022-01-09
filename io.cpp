@@ -1,7 +1,7 @@
 #include "io.h"
 #include "encript.h"
 
-Io::Io(const QString& fileName, uint64_t passwd) : file(fileName), key(passwd) {
+Io::Io(const QString& fileName, uint64_t passwd) : key(passwd), file(fileName) {
 	file.open(QIODevice::ReadWrite);
 	if (QFile::exists(fileName)) { // load header
 		QDataStream ds(&file);

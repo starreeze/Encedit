@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>Directory</class>
+ <widget class="QMainWindow" name="Directory">
   <property name="windowModality">
-   <enum>Qt::ApplicationModal</enum>
+   <enum>Qt::NonModal</enum>
   </property>
   <property name="geometry">
    <rect>
@@ -31,6 +31,21 @@
     </property>
     <property name="tabKeyNavigation">
      <bool>true</bool>
+    </property>
+    <property name="showDropIndicator" stdset="0">
+     <bool>false</bool>
+    </property>
+    <property name="alternatingRowColors">
+     <bool>true</bool>
+    </property>
+    <property name="selectionBehavior">
+     <enum>QAbstractItemView::SelectRows</enum>
+    </property>
+    <property name="verticalScrollMode">
+     <enum>QAbstractItemView::ScrollPerPixel</enum>
+    </property>
+    <property name="horizontalScrollMode">
+     <enum>QAbstractItemView::ScrollPerPixel</enum>
     </property>
     <property name="gridSize">
      <size>
@@ -62,11 +77,9 @@
     <property name="title">
      <string>New</string>
     </property>
-   </widget>
-   <widget class="QMenu" name="menuDelete">
-    <property name="title">
-     <string>Delete</string>
-    </property>
+    <addaction name="separator"/>
+    <addaction name="actionFile"/>
+    <addaction name="actionEntry"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -74,9 +87,18 @@
     </property>
    </widget>
    <addaction name="menuNew"/>
-   <addaction name="menuDelete"/>
    <addaction name="menuAbout"/>
   </widget>
+  <action name="actionFile">
+   <property name="text">
+    <string>File</string>
+   </property>
+  </action>
+  <action name="actionEntry">
+   <property name="text">
+    <string>Entry</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
