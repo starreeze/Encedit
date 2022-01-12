@@ -7,7 +7,6 @@
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     setCentralWidget(ui->textEdit);
-    setWindowTitle("EncEdit");
     timer = new QTimer(this);
     timer->setInterval(60000);
     timer->callOnTimeout(this, &MainWindow::auto_save);
@@ -110,14 +109,13 @@ void MainWindow::display(QString filename, bool updateFilename) {
     if (sFile.open(QFile::ReadOnly)) {
         if (updateFilename)
             set_filename(filename);
-        QByteArray content = sFile.readAll();
+        content = sFile.readAll();
         sFile.close();
         bool ok; QString password;
         password = QInputDialog::getText(this, "password", QString("Password for encripted document %1:").arg(config.file_path), QLineEdit::Password, "", &ok);
         if (ok) {
             config.password = password.toULong();
-            QString text = decript(content, config.password);
-            ui->textEdit->setPlainText(text);
+            ui->textEdit->setPlainText(decript(content, config.password));
             text_connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
             timer->start();
             return;
@@ -243,12 +241,21 @@ void MainWindow::close_current() {
 void MainWindow::save_current(bool saveClean) {
     if (!dirty && !saveClean)
         return;
-    QString text = ui->textEdit->toPlainText();
     QFile sFile(config.file_path);
-    if (sFile.open(QFile::WriteOnly)) {
-        sFile.write(encript(text, config.password));
+    if (sFile.open(QFile::WriteOnly | QFile::Append)) {
+        QByteArray newContent = encript(ui->textEdit->toPlainText(), config.password);
+        int i = 0, os = content.size(), ns = newContent.size();
+        for (; i < qMin(ns, os) && content[i] == newContent[i]; ++i);
+        auto modified = newContent.mid(i);
+        qDebug() << modified;
+        sFile.resize(i);
+        qDebug() << sFile.size();
+        sFile.seek(i);
+        qDebug() << sFile.write(modified);
+        qDebug() << sFile.size();
         sFile.close();
         set_dirty(false);
+        content = newContent;
     }
     else
         on_actionSave_As_triggered();
