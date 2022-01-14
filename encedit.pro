@@ -13,13 +13,15 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
+        indexmodel.cpp \
         mainwindow.cpp\
         encript.cpp\
         config.cpp
 
 HEADERS  += mainwindow.h\
         encript.h\
-        config.h
+        config.h \
+        indexmodel.h
 
 FORMS    += mainwindow.ui
 

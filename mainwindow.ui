@@ -6,22 +6,44 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1200</width>
-    <height>900</height>
+    <width>1600</width>
+    <height>1000</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>EncEdit</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QTextEdit" name="textEdit">
+   <widget class="QPlainTextEdit" name="textEdit">
+    <property name="geometry">
+     <rect>
+      <x>209</x>
+      <y>0</y>
+      <width>1391</width>
+      <height>941</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="listWidget">
     <property name="geometry">
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>1200</width>
-      <height>850</height>
+      <width>211</width>
+      <height>941</height>
      </rect>
+    </property>
+    <property name="editTriggers">
+     <set>QAbstractItemView::NoEditTriggers</set>
+    </property>
+    <property name="showDropIndicator" stdset="0">
+     <bool>false</bool>
+    </property>
+    <property name="uniformItemSizes">
+     <bool>true</bool>
+    </property>
+    <property name="itemAlignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
   </widget>
@@ -30,7 +52,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1200</width>
+     <width>1600</width>
      <height>22</height>
     </rect>
    </property>

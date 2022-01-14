@@ -1,11 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #include <QMainWindow>
-#include <QtGui>
-#include <QtCore>
 #include <QFileDialog>
 #include <QKeyEvent>
 #include "config.h"
+#include "indexmodel.h"
 namespace Ui {
     class MainWindow;
 }
@@ -29,19 +28,23 @@ private slots:
     void on_actionUndo_triggered();
     void on_actionRedo_triggered();
     void on_text_modified();
-    void auto_save();
+    // void auto_save();
+    void on_listWidget_clicked(const QModelIndex& index);
+
 private:
     Ui::MainWindow* ui;
     Config config;
     bool dirty = false, ctrl_pressed = false, shift_pressed = false;
     QMetaObject::Connection text_connection;
-    QTimer* timer;
+    // QTimer* timer;
     QByteArray content;
+    IndexModel index;
     void set_filename(QString filename);
     void display(QString filename, bool updateFilename = true);
     void set_dirty(bool val);
     void close_current();
     void save_current(bool saveClean = false);
+    void update_index(const QString& text);
 };
 
 #endif // MAINWINDOW_H

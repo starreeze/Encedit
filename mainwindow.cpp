@@ -3,13 +3,21 @@
 #include "encript.h"
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QTimer>
+#include <QStandardItemModel>
+#include <QPlainTextEdit>
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    setCentralWidget(ui->textEdit);
-    timer = new QTimer(this);
-    timer->setInterval(60000);
-    timer->callOnTimeout(this, &MainWindow::auto_save);
+    delete ui->textEdit;
+    ui->textEdit = new QPlainTextEdit(this);
+    ui->textEdit->setGeometry(215, 72, 1380, 930);
+    ui->listWidget = new QListWidget(this);
+    ui->listWidget->setGeometry(QRect(0, 72, 215, 930));
+    ui->listWidget->setFont(QFont("consolas", 12));
+    // timer = new QTimer(this);
+    // timer->setInterval(60000);
+    // timer->callOnTimeout(this, &MainWindow::auto_save);
 }
 
 MainWindow::~MainWindow() {
@@ -115,9 +123,11 @@ void MainWindow::display(QString filename, bool updateFilename) {
         password = QInputDialog::getText(this, "password", QString("Password for encripted document %1:").arg(config.file_path), QLineEdit::Password, "", &ok);
         if (ok) {
             config.password = password.toULong();
-            ui->textEdit->setPlainText(decript(content, config.password));
+            QString text = decript(content, config.password);
+            ui->textEdit->setPlainText(text);
+            update_index(text);
             text_connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
-            timer->start();
+            // timer->start();
             return;
         }
     }
@@ -127,7 +137,7 @@ void MainWindow::display(QString filename, bool updateFilename) {
 void MainWindow::on_actionNew_triggered() {
     close_current();
     text_connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
-    timer->start();
+    // timer->start();
     set_filename("");
     ui->textEdit->setPlainText("");
     set_dirty(true);
@@ -146,7 +156,7 @@ void MainWindow::on_actionSave_triggered() {
 }
 
 void MainWindow::on_actionSave_As_triggered() {
-    QString file = QFileDialog::getSaveFileName(this, "Save as", "", "Encripted text files (*.enc)");
+    QString file = QFileDialog::getSaveFileName(this, "Save as", "", "Encripted text files(*.enc)");
     if (!file.isEmpty()) {
         set_filename(file);
         QString confirm_password, password;
@@ -185,27 +195,29 @@ void MainWindow::on_actionRedo_triggered() {
 
 void MainWindow::on_text_modified() {
     set_dirty(true);
+    // if (ui->textEdit->toPlainText()[ui->textEdit->textCursor().position() - 1] == '\n')
+    //     ui->textEdit->insertPlainText("\t");
 }
 
-void MainWindow::auto_save() {
-    if (!dirty) return;
-    QString text = ui->textEdit->toPlainText();
-    QFile sFile(".autosave");
-    if (sFile.open(QFile::WriteOnly)) {
-        sFile.write(encript(text, config.password));
-        sFile.close();
-    }
-    else
-        QMessageBox::critical(this, "Failure", "Cannot write file; please check permissions.");
-}
+// void MainWindow::auto_save() {
+//     QString text = ui->textEdit->toPlainText();
+//     update_index(text);
+    /* !autosave disabled to improve performance */
+    // if (!dirty) return;
+    // QFile sFile(".autosave");
+    // if (sFile.open(QFile::WriteOnly)) {
+    //     sFile.write(encript(text, config.password));
+    //     sFile.close();
+    // }
+    // else
+    //     QMessageBox::critical(this, "Failure", "Cannot write file; please check permissions.");
+// }
 
 void MainWindow::set_filename(QString filename) {
     config.file_path = filename;
     int i = filename.length();
-    if (!i)
-        filename = "new*";
-    while (i && filename[--i] != '/')
-        ;
+    if (!i)   filename = "new*";
+    while (i && filename[--i] != '/');
     setWindowTitle(filename.mid(i + (filename[i] == '/')) + " - EncEdit");
 }
 
@@ -227,7 +239,7 @@ void MainWindow::set_dirty(bool val) {
 }
 
 void MainWindow::close_current() {
-    disconnect(text_connection); timer->stop();
+    disconnect(text_connection); // timer->stop();
     if (dirty && !ui->textEdit->toPlainText().isEmpty()) {
         auto response = QMessageBox::question(this, "Save", "Save your document?");
         if (response == QMessageBox::Yes)
@@ -247,16 +259,31 @@ void MainWindow::save_current(bool saveClean) {
         int i = 0, os = content.size(), ns = newContent.size();
         for (; i < qMin(ns, os) && content[i] == newContent[i]; ++i);
         auto modified = newContent.mid(i);
-        qDebug() << modified;
         sFile.resize(i);
-        qDebug() << sFile.size();
         sFile.seek(i);
-        qDebug() << sFile.write(modified);
-        qDebug() << sFile.size();
+        sFile.write(modified);
         sFile.close();
         set_dirty(false);
         content = newContent;
+        update_index(ui->textEdit->toPlainText());
     }
     else
         on_actionSave_As_triggered();
+}
+
+void MainWindow::update_index(const QString& text) {
+    index.load(text);
+    ui->listWidget->clear();
+    auto& strl = index.string_list();
+    ui->listWidget->addItems(strl);
+//    ui->listWidget->update();
+    connect(ui->listWidget, &QAbstractItemView::clicked, this, &MainWindow::on_listWidget_clicked);
+}
+
+void MainWindow::on_listWidget_clicked(const QModelIndex& idx) {
+    auto cursor = ui->textEdit->textCursor();
+    cursor.setPosition(ui->textEdit->toPlainText().size());
+    ui->textEdit->setTextCursor(cursor);
+    cursor.setPosition(index[idx]);
+    ui->textEdit->setTextCursor(cursor);
 }
