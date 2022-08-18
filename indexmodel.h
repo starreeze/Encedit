@@ -4,6 +4,7 @@
 #include <QStringList>
 #include <QVector>
 #include <QModelIndex>
+#include "args.h"
 
 class IndexModel {
     QStringList indexList;
@@ -11,7 +12,7 @@ class IndexModel {
 public:
     inline const QStringList& string_list() { return indexList; }
     inline int operator[](const QModelIndex& idx) { return indexPos[idx.row()]; }
-    void load(const QString& content);
+    void load(const QString& content, const QString& regexp = default_title_regexp);
 };
 
 #endif // INDEXMODEL_H

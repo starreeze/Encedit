@@ -2,6 +2,10 @@
 #include "ui_mainwindow.h"
 #include "encript.h"
 #include <QInputDialog>
+#include <QFontDialog>
+#include <QFont>
+#include <QDir>
+#include <QStandardPaths>
 #include <QMessageBox>
 #include <QTimer>
 #include <QStandardItemModel>
@@ -9,19 +13,22 @@
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    ui->listWidget->setFont(QFont("consolas", 12));
+    ui->listWidget->setFont(QFont(default_fontname, contents_fontsize));
+    QString appDataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir(appDataDir).mkpath(".");
+    status_path = appDataDir + "/" + status_file_name;
     // timer = new QTimer(this);
     // timer->setInterval(60000);
     // timer->callOnTimeout(this, &MainWindow::auto_save);
 }
 
 MainWindow::~MainWindow() {
-    QFile history(".history");
-    if (history.open(QFile::WriteOnly | QFile::Text)) {
-        QTextStream out(&history);
+    QFile status_file(status_path);
+    if (status_file.open(QFile::WriteOnly | QFile::Text)) {
+        QTextStream out(&status_file);
         config.cursor_pos = ui->textEdit->textCursor().position();
         out << config;
-        history.close();
+        status_file.close();
     }
     close_current();
     delete ui;
@@ -32,7 +39,7 @@ void MainWindow::receive_args(int argc, char* argv[]) {
     if (argc == 2)
         display(argv[1]);
     else {
-        QFile history(".history");
+        QFile history(status_path);
         if (history.open(QFile::ReadOnly | QFile::Text)) {
             QTextStream in(&history);
             in >> config;
@@ -50,7 +57,7 @@ void MainWindow::receive_args(int argc, char* argv[]) {
             auto cursor = ui->textEdit->textCursor();
             cursor.setPosition(config.cursor_pos);
             ui->textEdit->setTextCursor(cursor);
-            ui->textEdit->setFont(QFont("Consolas", config.font_size));
+            ui->textEdit->setFont(QFont(config.font_name, config.font_size));
         }
         else
             on_actionNew_triggered();
@@ -81,16 +88,38 @@ void MainWindow::keyPressEvent(QKeyEvent* keyEvent) {
         if (ctrl_pressed)
             on_actionOpen_triggered();
         break;
+    case Qt::Key_F:
+        if (ctrl_pressed) {
+            bool ok;
+            QFont font = QFontDialog::getFont(&ok, QFont(config.font_name, config.font_size), this);
+            if (ok) {
+                config.font_name = font.family();
+                config.font_size = font.pointSize();
+                ui->textEdit->setFont(font);
+                ui->listWidget->setFont(QFont(config.font_name, contents_fontsize));
+            }
+        }
+        break;
+    case Qt::Key_R:
+        if (ctrl_pressed) {
+            bool ok;
+            QString regexp = QInputDialog::getText(this, "title regexp", QString("Enter an regexp to match titles in your passage for contents to display:"), QLineEdit::Normal, config.title_regexp, &ok);
+            if (ok) {
+                config.title_regexp = regexp;
+                update_index(ui->textEdit->toPlainText(), regexp);
+            }
+        }
+        break;
     case Qt::Key_Equal:
         if (ctrl_pressed) {
             config.font_size += 2;
-            ui->textEdit->setFont(QFont("Consolas", config.font_size));
+            ui->textEdit->setFont(QFont(config.font_name, config.font_size));
         }
         break;
     case Qt::Key_Minus:
         if (ctrl_pressed) {
             config.font_size -= 2;
-            ui->textEdit->setFont(QFont("Consolas", config.font_size));
+            ui->textEdit->setFont(QFont(config.font_name, config.font_size));
         }
         break;
     }
@@ -266,8 +295,8 @@ void MainWindow::save_current(bool saveClean) {
         on_actionSave_As_triggered();
 }
 
-void MainWindow::update_index(const QString& text) {
-    index.load(text);
+void MainWindow::update_index(const QString& text, const QString& regexp) {
+    index.load(text, regexp);
     ui->listWidget->clear();
     auto& strl = index.string_list();
     ui->listWidget->addItems(strl);

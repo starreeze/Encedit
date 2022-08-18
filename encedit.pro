@@ -19,6 +19,7 @@ SOURCES += main.cpp\
         config.cpp
 
 HEADERS  += mainwindow.h\
+        args.h \
         encript.h\
         config.h \
         indexmodel.h

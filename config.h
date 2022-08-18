@@ -3,11 +3,12 @@
 
 #include <QString>
 #include <QTextStream>
+#include "args.h"
 
 struct Config
 {
-	QString file_path;
-	int cursor_pos = 0, font_size = 20;
+    QString file_path, font_name = default_fontname, title_regexp = default_title_regexp;
+    int cursor_pos = 0, font_size = default_text_fontsize;
 	uint64_t password;
 };
 
