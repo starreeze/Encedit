@@ -3,8 +3,8 @@
 #include <QMainWindow>
 #include <QFileDialog>
 #include <QKeyEvent>
-#include "config.h"
 #include "indexmodel.h"
+#include "io.h"
 #include "args.h"
 namespace Ui {
     class MainWindow;
@@ -34,11 +34,11 @@ private slots:
 
 private:
     Ui::MainWindow* ui;
+    FileIo io;
     Config config;
     bool dirty = false, ctrl_pressed = false, shift_pressed = false;
     QMetaObject::Connection text_connection;
     // QTimer* timer;
-    QByteArray content;
     IndexModel index;
     QString status_path;
     void set_filename(QString filename);
@@ -46,7 +46,8 @@ private:
     void set_dirty(bool val);
     void close_current();
     void save_current(bool saveClean = false);
-    void update_index(const QString& text, const QString& regexp = default_title_regexp);
+    void update_index(const QString& text, const QString& regexp = "");
+    void update_style();
 };
 
 #endif // MAINWINDOW_H

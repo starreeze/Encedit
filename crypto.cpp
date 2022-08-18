@@ -1,13 +1,15 @@
-#include "encript.h"
+#include "crypto.h"
 
 uint64_t next;
-uint64_t myrand() {
+static uint64_t myrand() {
 	return next = next * 1103515245 + 12345;
 }
 
-QByteArray encript(const QString& str, uint64_t key) {
+QByteArray encrypt(const QString& str, uint64_t key, int skip_times) {
 	next = key;
-	QString s = str;
+    for(++skip_times; --skip_times; )
+        myrand();
+    QString s = str;
 	while (s.length() % 4)
 		s.append(' ');
 	QByteArray res(s.length() * 2, 0);
@@ -22,7 +24,7 @@ QByteArray encript(const QString& str, uint64_t key) {
 	return res;
 }
 
-QString decript(const QByteArray& s, uint64_t key) {
+QString decrypt(const QByteArray& s, uint64_t key) {
 	next = key;
 	QString res(s.length() / 2, 0);
 	for (int i = 0; i < res.length() / 4; ++i) {
