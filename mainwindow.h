@@ -1,33 +1,27 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #include <QMainWindow>
-#include <QtGui>
-#include <QtCore>
 #include <QFileDialog>
 #include <QKeyEvent>
-#include "io.h"
+#include "config.h"
+#include "indexmodel.h"
 namespace Ui {
     class MainWindow;
 }
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
-
 public:
-    MainWindow(int entryIndex, const QString& content, int fontSize, Io* io, QWidget* parent = nullptr);
+    explicit MainWindow(QWidget* parent = 0);
     ~MainWindow();
-    // void receive_args(int argc, char* argv[]);
+    void receive_args(int argc, char* argv[]);
     void keyPressEvent(QKeyEvent* keyEvent);
     void keyReleaseEvent(QKeyEvent* keyEvent);
-
-signals:
-    void entry_closed();
-
 private slots:
-    // void on_actionNew_triggered();
-    // void on_actionOpen_triggered();
+    void on_actionNew_triggered();
+    void on_actionOpen_triggered();
     void on_actionSave_triggered();
-    // void on_actionSave_As_triggered();
+    void on_actionSave_As_triggered();
     void on_actionCopy_triggered();
     void on_actionPaste_triggered();
     void on_actionCut_triggered();
@@ -35,23 +29,22 @@ private slots:
     void on_actionRedo_triggered();
     void on_text_modified();
     // void auto_save();
+    void on_listWidget_clicked(const QModelIndex& index);
 
 private:
     Ui::MainWindow* ui;
-    idx_t entryIdx;
-    int fontSize;
-    Io* pio;
+    Config config;
     bool dirty = false, ctrl_pressed = false, shift_pressed = false;
     QMetaObject::Connection text_connection;
     // QTimer* timer;
-    // void set_filename(QString filename);
-    // void display(QString filename, bool updateFilename = true);
+    QByteArray content;
+    IndexModel index;
+    void set_filename(QString filename);
+    void display(QString filename, bool updateFilename = true);
     void set_dirty(bool val);
-    // void close_current();
+    void close_current();
     void save_current(bool saveClean = false);
-
-protected:
-    void closeEvent(QCloseEvent* event) { emit entry_closed(); }
+    void update_index(const QString& text);
 };
 
 #endif // MAINWINDOW_H
