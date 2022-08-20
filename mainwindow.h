@@ -6,11 +6,13 @@
 #include "indexmodel.h"
 #include "io.h"
 #include "args.h"
-namespace Ui {
+namespace Ui
+{
     class MainWindow;
 }
 
-class MainWindow : public QMainWindow {
+class MainWindow : public QMainWindow
+{
     Q_OBJECT
 public:
     explicit MainWindow(QWidget* parent = 0);
@@ -42,8 +44,8 @@ private:
     IndexModel index;
     QString status_path;
     void set_filename(QString filename);
-    void display(QString filename, bool updateFilename = true);
-    void set_dirty(bool val);
+    void display(QString filename, bool updateFilename = true, bool encrypt = true);
+    void set_dirty(bool val = true);
     void close_current();
     void save_current(bool saveClean = false);
     void update_index(const QString& text, const QString& regexp = "");

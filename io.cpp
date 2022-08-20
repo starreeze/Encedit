@@ -7,18 +7,15 @@ static QString get_line_str_arg(QTextStream& in) {
     return arg;
 }
 
-QString FileIo::read()
-{
+QString FileIo::read() {
     QFile file(file_path);
     file.open(QFile::ReadOnly);
     QByteArray content = file.readAll();
     file.close();
-    file_text = decrypt(content, key);
-    return file_text;
+    return decrypt(content, key);
 }
 
-void FileIo::write(const QString &text, bool rewrite_all)
-{
+void FileIo::write(const QString& text, bool rewrite_all) {
     QFile file(file_path);
     file.open(QFile::WriteOnly | QFile::Append);
     if (rewrite_all)
@@ -38,8 +35,7 @@ void FileIo::write(const QString &text, bool rewrite_all)
     file.close();
 }
 
-void load_conf(QTextStream &in, Config &conf, FileIo &io)
-{
+void load_conf(QTextStream& in, Config& conf, FileIo& io) {
     io.file_path = get_line_str_arg(in);
     conf.font_name = get_line_str_arg(in);
     conf.title_regexp = get_line_str_arg(in);
@@ -56,8 +52,7 @@ void load_conf(QTextStream &in, Config &conf, FileIo &io)
         conf.background_color = default_background_color;
 }
 
-void save_conf(QTextStream &out, const Config &conf, const FileIo &io)
-{
+void save_conf(QTextStream& out, const Config& conf, const FileIo& io) {
     out << io.file_path << '\n'
         << conf.font_name << '\n'
         << conf.title_regexp << '\n'
@@ -67,7 +62,6 @@ void save_conf(QTextStream &out, const Config &conf, const FileIo &io)
         << conf.background_color;
 }
 
-QString color2str(QRgb color)
-{
-     return QString("%1, %2, %3").arg(QColor(color).red()).arg(QColor(color).green()).arg(QColor(color).blue());
+QString color2str(QRgb color) {
+    return QString("%1, %2, %3").arg(QColor(color).red()).arg(QColor(color).green()).arg(QColor(color).blue());
 }

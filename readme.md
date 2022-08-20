@@ -2,24 +2,26 @@
 
 Encedit - a simple and elegant plain text editor: write down anything while secured by encrytion!
 
-version 2.1, copywrite (c) 2021~2022 by xsy, GPL v3 LICENSE.
+version 2.3, copywrite (c) 2021~2022 by xsy, GPL v3 LICENSE.
 
 ## Features
 
-- Full encrytion;
-- unicode support;
-- keyboard friendly - a lot of shotcuts;
+- Primitive encrytion;
+- unicode and UTF-8 support;
+- keyboard friendly;
 - automatic, customized index;
 - customized font;
 - customized background/foreground color;
-- file history custom settings memorized;
-- frameless window mode;
-- extremely low resource usage;
+- file history and custom settings memorized;
+- simple window design - you can even hide window border;
+- ultra-fast - faster than windows notepad in line wrapper mode on 10x scale;
+- extremely low resource usage - usually about 20MB memory and less than 0.5% cpu occupied;
 - incremental encryption & save;
 - and a lot more!
 
 ## Keyboard Shotcuts
 
+- Ctrl-H: show help on shotcuts;
 - Ctrl-A: select all;
 - Ctrl-C: copy;
 - Ctrl-X: cut;

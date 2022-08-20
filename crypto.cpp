@@ -6,6 +6,8 @@ static uint64_t myrand() {
 }
 
 QByteArray encrypt(const QString& str, uint64_t key, int skip_times) {
+    if (!key)
+        return str.toUtf8();
 	next = key;
     for(++skip_times; --skip_times; )
         myrand();
@@ -25,6 +27,8 @@ QByteArray encrypt(const QString& str, uint64_t key, int skip_times) {
 }
 
 QString decrypt(const QByteArray& s, uint64_t key) {
+    if (!key)
+        return QString::fromUtf8(s);
 	next = key;
 	QString res(s.length() / 2, 0);
 	for (int i = 0; i < res.length() / 4; ++i) {

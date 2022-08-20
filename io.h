@@ -19,7 +19,7 @@ struct FileIo
     QString file_text, file_path;
     uint64_t key;
     FileIo() {}
-    FileIo(uint64_t crypt_key, const QString& filename):
+    FileIo(uint64_t crypt_key, const QString& filename) :
         file_path(filename), key(crypt_key) {}
     QString read();
     void write(const QString& text, bool rewrite_all = false);

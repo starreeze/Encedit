@@ -17,9 +17,16 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->setupUi(this);
     ui->listWidget->setFont(QFont(default_fontname, contents_fontsize));
     ui->centralWidget->setLayout(ui->horizontalLayout);
-    QString appDataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QDir(appDataDir).mkpath(".");
-    status_path = appDataDir + "/" + status_file_name;
+    ui->textEdit->setFocus();
+    QString appDataDirPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir appDataDir(appDataDirPath);
+    appDataDir.mkpath(".");
+    status_path = appDataDirPath + "/" + status_file_name;
+    QFile status_file(status_path);
+    if (!status_file.exists()) {
+        status_file.open(QIODevice::WriteOnly);
+        status_file.close();
+    }
     // timer = new QTimer(this);
     // timer->setInterval(60000);
     // timer->callOnTimeout(this, &MainWindow::auto_save);
@@ -42,11 +49,11 @@ void MainWindow::receive_args(int argc, char* argv[]) {
     if (argc == 2)
         display(argv[1]);
     else {
-        QFile history(status_path);
-        if (history.open(QFile::ReadOnly | QFile::Text)) {
-            QTextStream in(&history);
+        QFile status(status_path);
+        if (status.open(QFile::ReadOnly | QFile::Text)) {
+            QTextStream in(&status);
             load_conf(in, config, io);
-            history.close();
+            status.close();
             // auto-save
 //            if (QFile::exists(".autosave") &&
 //                QMessageBox::question(this, "Retrive", "Your document was not saved before an unexpected shutdown. Retrive your document?") == QMessageBox::Yes
@@ -69,12 +76,21 @@ void MainWindow::receive_args(int argc, char* argv[]) {
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* keyEvent) {
+    if (ui->textEdit->isReadOnly()) {
+        ui->textEdit->clear();
+        ui->textEdit->setReadOnly(false);
+        set_dirty(true);
+        text_connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
+    }
     switch (keyEvent->key()) {
     case Qt::Key_Control:
         ctrl_pressed = true;
         break;
     case Qt::Key_Shift:
         shift_pressed = true;
+        break;
+    case Qt::Key_H:
+        QMessageBox::information(this, "shotcut help", help_text);
         break;
     case Qt::Key_S:
         if (ctrl_pressed) {
@@ -133,12 +149,11 @@ void MainWindow::keyPressEvent(QKeyEvent* keyEvent) {
             show();
         }
         break;
-    case Qt::Key_L: {
+    case Qt::Key_L:
         config.font_color = QColorDialog::getColor(Qt::black, this, "Font color").rgb();
-        config.background_color = QColorDialog::getColor(Qt::black, this, "Background color").rgb();
+        config.background_color = QColorDialog::getColor(Qt::white, this, "Background color").rgb();
         update_style();
-    }
-        break;
+                  break;
     case Qt::Key_Equal:
         if (ctrl_pressed) {
             config.font_size += 2;
@@ -165,7 +180,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent* keyEvent) {
     }
 }
 
-void MainWindow::display(QString filename, bool updateFilename) {
+void MainWindow::display(QString filename, bool updateFilename, bool encrypt) {
     if (!QFile::exists(filename)) {
         on_actionNew_triggered();
         return;
@@ -173,7 +188,7 @@ void MainWindow::display(QString filename, bool updateFilename) {
     if (updateFilename)
         set_filename(filename);
     bool ok; QString password;
-    password = QInputDialog::getText(this, "password", QString("Password for encripted document %1:").arg(io.file_path), QLineEdit::Password, "", &ok);
+    password = QInputDialog::getText(this, "password", QString("Password for document %1 (leave it blank if this is a plain text document):").arg(io.file_path), QLineEdit::Password, "", &ok);
     if (ok) {
         io.key = password.toULong();
         io.file_path = filename;
@@ -187,15 +202,15 @@ void MainWindow::display(QString filename, bool updateFilename) {
 
 void MainWindow::on_actionNew_triggered() {
     close_current();
-    text_connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
     // timer->start();
     set_filename("");
-    ui->textEdit->setPlainText("");
-    set_dirty(true);
+    ui->textEdit->setPlainText(QString(additional_welcome_message) + help_text + dismiss_reminder);
+    ui->textEdit->setReadOnly(true);
+//    connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_dismiss_key_pressed()));
 }
 
 void MainWindow::on_actionOpen_triggered() {
-    QString file = QFileDialog::getOpenFileName(this, "Open a file", "", "Encripted text files(*.enc)");
+    QString file = QFileDialog::getOpenFileName(this, "Open a file", "", "Text files(*.enc *.txt)");
     if (!file.isEmpty()) {
         close_current();
         display(file);
@@ -207,19 +222,28 @@ void MainWindow::on_actionSave_triggered() {
 }
 
 void MainWindow::on_actionSave_As_triggered() {
-    QString file = QFileDialog::getSaveFileName(this, "Save as", "my.enc", "Encripted text files(*.enc)");
+    QString file = QFileDialog::getSaveFileName(this, "Save as", "my.enc", "Text files(*.enc *.txt)");
     if (!file.isEmpty()) {
         set_filename(file);
-        QString confirm_password, password;
-        while (true) {
-            password = QInputDialog::getText(this, "password", QString("A digit password to encript document %1:").arg(file), QLineEdit::Password);
-            confirm_password = QInputDialog::getText(this, "password", "Please confirm your password:", QLineEdit::Password);
-            if (password != confirm_password)
-                QMessageBox::warning(this, "password", "Password mismatch!");
-            else
-                break;
+        if (file.endsWith(".txt"))
+            io.key = 0;
+        else {
+            QString confirm_password, password;
+            while (true) {
+                bool ok;
+                password = QInputDialog::getText(this, "password", QString("A digit password to encript document %1 (leave it blank if you don't want encryption):").arg(file), QLineEdit::Password, "", &ok);
+                if (!ok)    return;
+                if (password.isEmpty())
+                    break;
+                confirm_password = QInputDialog::getText(this, "password", "Please confirm your password:", QLineEdit::Password, "", &ok);
+                if (!ok)    return;
+                if (password != confirm_password)
+                    QMessageBox::warning(this, "password", "Password mismatch!");
+                else
+                    break;
+            }
+            io.key = password.toULong();
         }
-        io.key = password.toULong();
         QFile _file(file);
         _file.open(QIODevice::WriteOnly);
         _file.close();
@@ -313,7 +337,7 @@ void MainWindow::save_current(bool saveClean) {
 }
 
 void MainWindow::update_index(const QString& text, const QString& regexp) {
-    index.load(text, regexp.size() ? regexp: config.title_regexp);
+    index.load(text, regexp.size() ? regexp : config.title_regexp);
     ui->listWidget->clear();
     auto& strl = index.string_list();
     ui->listWidget->addItems(strl);
