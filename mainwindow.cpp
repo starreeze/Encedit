@@ -81,8 +81,10 @@ void MainWindow::keyPressEvent(QKeyEvent* keyEvent) {
         ui->textEdit->setReadOnly(false);
         set_dirty(true);
         text_connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
+        return;
     }
     switch (keyEvent->key()) {
+        // reserved: ACDKSXZ
     case Qt::Key_Control:
         ctrl_pressed = true;
         break;
@@ -130,7 +132,7 @@ void MainWindow::keyPressEvent(QKeyEvent* keyEvent) {
             }
         }
         break;
-    case Qt::Key_K:
+    case Qt::Key_T:
         if (ctrl_pressed) {
             if (ui->listWidget->isHidden())
                 ui->listWidget->show();
@@ -138,21 +140,21 @@ void MainWindow::keyPressEvent(QKeyEvent* keyEvent) {
         }
         break;
     case Qt::Key_B:
-        if (windowFlags().testFlag(Qt::FramelessWindowHint)) {
-            hide();
-            setWindowFlag(Qt::FramelessWindowHint, false);
-            show();
-        }
-        else {
-            hide();
-            setWindowFlag(Qt::FramelessWindowHint);
-            show();
-        }
+        hide();
+        setWindowFlag(Qt::FramelessWindowHint, !windowFlags().testFlag(Qt::FramelessWindowHint));
+        show();
         break;
-    case Qt::Key_L:
-        config.font_color = QColorDialog::getColor(Qt::black, this, "Font color").rgb();
-        config.background_color = QColorDialog::getColor(Qt::white, this, "Background color").rgb();
-        update_style();
+    case Qt::Key_L: {
+        QColor selected = QColorDialog::getColor(Qt::black, this, "Font color").rgb();
+        if (selected.isValid()) {
+            config.font_color = selected.rgb();
+            selected = QColorDialog::getColor(Qt::white, this, "Background color").rgb();
+            if (selected.isValid()) {
+                config.background_color = selected.rgb();
+                update_style();
+            }
+        }
+    }
                   break;
     case Qt::Key_Equal:
         if (ctrl_pressed) {

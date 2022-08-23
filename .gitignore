@@ -14,8 +14,8 @@
 
 /.qmake.cache
 /.qmake.stash
-*.pro.user
-*.pro.user.*
+*.user
+*.user.*
 *.moc
 moc_*
 qrc_*.cpp
@@ -32,3 +32,6 @@ Makefile*
 .history
 encedit
 bin
+build
+CMakeCache.txt
+CMakeFiles

@@ -32,7 +32,7 @@ LSTR help_text =
 "Ctrl - F: select font family and size;\n"
 "Ctrl - L: select font color and background color;\n"
 "Ctrl - R: set index match rule(regular expression);\n"
-"Ctrl - K: toggle index(side widget) view;\n"
+"Ctrl - T: toggle index(side widget) view;\n"
 "Ctrl - B: toggle frameless mode;\n"
 "Ctrl - =: zoom in;\n"
 "Ctrl - -: zoom out.";
