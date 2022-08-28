@@ -15,17 +15,17 @@ find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 set(PROJECT_SOURCES
-        args.h
-        main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        crypto.cpp
-        crypto.h
-        io.cpp
-        io.h
-        indexmodel.cpp
-        indexmodel.h
-        mainwindow.ui
+            args.h
+            main.cpp
+            mainwindow.cpp
+            mainwindow.h
+            crypto.cpp
+            crypto.h
+            io.cpp
+            io.h
+            indexmodel.cpp
+            indexmodel.h
+            mainwindow.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -54,7 +54,7 @@ endif()
 target_link_libraries(encedit PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
 set_target_properties(encedit PROPERTIES
-    MACOSX_BUNDLE_GUI_IDENTIFIER encedit.xsy
+    MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
 )
