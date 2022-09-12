@@ -1,12 +1,5 @@
 #include "io.h"
 
-static QString get_line_str_arg(QTextStream& in) {
-    QString arg = in.readLine();
-    if (arg.size() && arg.back() == '\n')
-        arg = arg.mid(0, arg.length() - 1);
-    return arg;
-}
-
 QString FileIo::read() {
     QFile file(file_path);
     file.open(QFile::ReadOnly);
@@ -33,33 +26,6 @@ void FileIo::write(const QString& text, bool rewrite_all) {
         file.write(modified);
     }
     file.close();
-}
-
-void load_conf(QTextStream& in, Config& conf, FileIo& io) {
-    io.file_path = get_line_str_arg(in);
-    conf.font_name = get_line_str_arg(in);
-    conf.title_regexp = get_line_str_arg(in);
-    in >> conf.cursor_pos >> conf.font_size >> conf.font_color >> conf.background_color;
-    if (!conf.font_size)
-        conf.font_size = default_text_fontsize;
-    if (!conf.font_name.size())
-        conf.font_name = default_fontname;
-    if (!conf.title_regexp.size())
-        conf.title_regexp = default_title_regexp;
-    if (!conf.font_color)
-        conf.font_color = default_font_color;
-    if (!conf.background_color)
-        conf.background_color = default_background_color;
-}
-
-void save_conf(QTextStream& out, const Config& conf, const FileIo& io) {
-    out << io.file_path << '\n'
-        << conf.font_name << '\n'
-        << conf.title_regexp << '\n'
-        << conf.cursor_pos << '\n'
-        << conf.font_size << '\n'
-        << conf.font_color << '\n'
-        << conf.background_color;
 }
 
 QString color2str(QRgb color) {

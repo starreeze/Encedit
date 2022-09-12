@@ -3,9 +3,10 @@
 #include <QMainWindow>
 #include <QFileDialog>
 #include <QKeyEvent>
+#include <QSettings>
 #include "indexmodel.h"
 #include "io.h"
-#include "args.h"
+#include "historylist.h"
 namespace Ui
 {
     class MainWindow;
@@ -15,14 +16,37 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit MainWindow(QWidget* parent = 0);
+    explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
     void receive_args(int argc, char* argv[]);
+    void post_show();
     void keyPressEvent(QKeyEvent* keyEvent);
     void keyReleaseEvent(QKeyEvent* keyEvent);
-private slots:
+//private slots:
+    // void auto_save();
+
+private:
+    Ui::MainWindow* ui;
+    FileIo io;
+    QSettings* setting;
+    HistoryList* history_list;
+    bool dirty = false, ctrl_pressed = false, shift_pressed = false;
+    QMetaObject::Connection text_connection;
+    // QTimer* timer;
+    IndexModel index;
+    void set_filename(QString filename);
+    void set_cursor_pos(int pos);
+    bool handle_ctrl_key(int key); // whether is handled
+    void display(QString filename, bool updateFilename = true, bool encrypt = true);
+    void set_dirty(bool val = true);
+    void close_current();
+    void save_current(bool saveClean = false);
+    void update_index(const QString& text, const QString& regexp = "");
+    void update_style();
+    void create_setting();
+
     void on_actionNew_triggered();
-    void on_actionOpen_triggered();
+    bool on_actionOpen_triggered();
     void on_actionSave_triggered();
     void on_actionSave_As_triggered();
     void on_actionCopy_triggered();
@@ -31,25 +55,7 @@ private slots:
     void on_actionUndo_triggered();
     void on_actionRedo_triggered();
     void on_text_modified();
-    // void auto_save();
     void on_listWidget_clicked(const QModelIndex& index);
-
-private:
-    Ui::MainWindow* ui;
-    FileIo io;
-    Config config;
-    bool dirty = false, ctrl_pressed = false, shift_pressed = false;
-    QMetaObject::Connection text_connection;
-    // QTimer* timer;
-    IndexModel index;
-    QString status_path;
-    void set_filename(QString filename);
-    void display(QString filename, bool updateFilename = true, bool encrypt = true);
-    void set_dirty(bool val = true);
-    void close_current();
-    void save_current(bool saveClean = false);
-    void update_index(const QString& text, const QString& regexp = "");
-    void update_style();
 };
 
 #endif // MAINWINDOW_H

@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QException>
 #include <QInputDialog>
 #include <QFontDialog>
 #include <QColorDialog>
@@ -12,35 +13,30 @@
 #include <QTimer>
 #include <QStandardItemModel>
 #include <QPlainTextEdit>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    ui->listWidget->setFont(QFont(default_fontname, contents_fontsize));
+    create_setting();
+    history_list = new HistoryList(setting);
     ui->centralWidget->setLayout(ui->horizontalLayout);
     ui->textEdit->setFocus();
-    QString appDataDirPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QDir appDataDir(appDataDirPath);
-    appDataDir.mkpath(".");
-    status_path = appDataDirPath + "/" + status_file_name;
-    QFile status_file(status_path);
-    if (!status_file.exists()) {
-        status_file.open(QIODevice::WriteOnly);
-        status_file.close();
-    }
+    move(setting->value("window_pos").value<QPoint>());
+    resize(setting->value("window_size").value<QSize>());
+    setWindowFlag(Qt::FramelessWindowHint, setting->value("frameless").toBool());
+    ui->listWidget->setHidden(!setting->value("sidebar").toBool());
     // timer = new QTimer(this);
     // timer->setInterval(60000);
     // timer->callOnTimeout(this, &MainWindow::auto_save);
 }
 
 MainWindow::~MainWindow() {
-    QFile status_file(status_path);
-    if (status_file.open(QFile::WriteOnly | QFile::Text)) {
-        QTextStream out(&status_file);
-        config.cursor_pos = ui->textEdit->textCursor().position();
-        save_conf(out, config, io);
-        status_file.close();
-    }
     close_current();
+    setting->setValue("window_pos", QVariant::fromValue(pos()));
+    setting->setValue("window_size", QVariant::fromValue(size()));
+    setting->setValue("frameless", windowFlags().testFlag(Qt::FramelessWindowHint));
+    setting->setValue("sidebar", !ui->listWidget->isHidden());
+    delete history_list;
     delete ui;
 }
 
@@ -49,11 +45,7 @@ void MainWindow::receive_args(int argc, char* argv[]) {
     if (argc == 2)
         display(argv[1]);
     else {
-        QFile status(status_path);
-        if (status.open(QFile::ReadOnly | QFile::Text)) {
-            QTextStream in(&status);
-            load_conf(in, config, io);
-            status.close();
+        if (history_list->repr().size()) { // not empty history
             // auto-save
 //            if (QFile::exists(".autosave") &&
 //                QMessageBox::question(this, "Retrive", "Your document was not saved before an unexpected shutdown. Retrive your document?") == QMessageBox::Yes
@@ -63,11 +55,7 @@ void MainWindow::receive_args(int argc, char* argv[]) {
 //                set_dirty(true);
 //            }
 //            else
-            display(io.file_path);
-            auto cursor = ui->textEdit->textCursor();
-            cursor.setPosition(config.cursor_pos);
-            ui->textEdit->setTextCursor(cursor);
-            ui->textEdit->setFont(QFont(config.font_name, config.font_size));
+            display(history_list->get_latest().file);
             update_style();
         }
         else
@@ -75,100 +63,41 @@ void MainWindow::receive_args(int argc, char* argv[]) {
     }
 }
 
+void MainWindow::post_show()
+{
+    auto _font = setting->value("font").value<QFont>();
+    ui->textEdit->setFont(_font);
+    ui->listWidget->setFont(QFont(contents_fontname, contents_fontsize));
+}
+
 void MainWindow::keyPressEvent(QKeyEvent* keyEvent) {
-    if (ui->textEdit->isReadOnly()) {
+    using namespace Qt;
+    auto key = keyEvent->key();
+    if (ui->textEdit->isReadOnly() && key != Key_Control && key != Key_Shift && key != Key_Alt && key != Key_CapsLock && key != Key_Super_L) {
+        if (ctrl_pressed) {
+            if (key >= Key_1 && key <= Key_9) {
+                try { // index out of range
+                    auto history_entry = history_list->get_entry(key - Key_1);
+                    display(history_entry.file);
+                    ui->textEdit->setReadOnly(false);
+                } catch (QException) { /* do nothing to wait for next input */ }
+            }
+            else if (handle_ctrl_key(key))
+                ui->textEdit->setReadOnly(key != Key_O);
+            return;
+        }
         ui->textEdit->clear();
-        ui->textEdit->setReadOnly(false);
         set_dirty(true);
         text_connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
+        ui->textEdit->setReadOnly(false);
         return;
     }
-    switch (keyEvent->key()) {
-        // reserved: ACDKSXZ
-    case Qt::Key_Control:
+    if (key == Key_Control)
         ctrl_pressed = true;
-        break;
-    case Qt::Key_Shift:
+    else if (key == Key_Shift)
         shift_pressed = true;
-        break;
-    case Qt::Key_H:
-        QMessageBox::information(this, "shotcut help", help_text);
-        break;
-    case Qt::Key_S:
-        if (ctrl_pressed) {
-            if (shift_pressed)
-                on_actionSave_As_triggered();
-            else
-                on_actionSave_triggered();
-        }
-        break;
-    case Qt::Key_N:
-        if (ctrl_pressed)
-            on_actionNew_triggered();
-        break;
-    case Qt::Key_O:
-        if (ctrl_pressed)
-            on_actionOpen_triggered();
-        break;
-    case Qt::Key_F:
-        if (ctrl_pressed) {
-            bool ok;
-            QFont font = QFontDialog::getFont(&ok, QFont(config.font_name, config.font_size), this);
-            if (ok) {
-                config.font_name = font.family();
-                config.font_size = font.pointSize();
-                ui->textEdit->setFont(font);
-                ui->listWidget->setFont(QFont(config.font_name, contents_fontsize));
-            }
-        }
-        break;
-    case Qt::Key_R:
-        if (ctrl_pressed) {
-            bool ok;
-            QString regexp = QInputDialog::getText(this, "title regexp", QString("Enter an regexp to match titles in your passage for contents to display:"), QLineEdit::Normal, config.title_regexp, &ok);
-            if (ok) {
-                config.title_regexp = regexp;
-                update_index(ui->textEdit->toPlainText(), regexp);
-            }
-        }
-        break;
-    case Qt::Key_T:
-        if (ctrl_pressed) {
-            if (ui->listWidget->isHidden())
-                ui->listWidget->show();
-            else    ui->listWidget->hide();
-        }
-        break;
-    case Qt::Key_B:
-        hide();
-        setWindowFlag(Qt::FramelessWindowHint, !windowFlags().testFlag(Qt::FramelessWindowHint));
-        show();
-        break;
-    case Qt::Key_L: {
-        QColor selected = QColorDialog::getColor(Qt::black, this, "Font color").rgb();
-        if (selected.isValid()) {
-            config.font_color = selected.rgb();
-            selected = QColorDialog::getColor(Qt::white, this, "Background color").rgb();
-            if (selected.isValid()) {
-                config.background_color = selected.rgb();
-                update_style();
-            }
-        }
-    }
-                  break;
-    case Qt::Key_Equal:
-        if (ctrl_pressed) {
-            config.font_size += 2;
-            ui->textEdit->setFont(QFont(config.font_name, config.font_size));
-        }
-        break;
-    case Qt::Key_Minus:
-        if (ctrl_pressed) {
-            config.font_size -= 2;
-            ui->textEdit->setFont(QFont(config.font_name, config.font_size));
-        }
-        break;
-    }
+    else if (ctrl_pressed)
+        handle_ctrl_key(key);
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* keyEvent) {
@@ -182,20 +111,23 @@ void MainWindow::keyReleaseEvent(QKeyEvent* keyEvent) {
     }
 }
 
-void MainWindow::display(QString filename, bool updateFilename, bool encrypt) {
-    if (!QFile::exists(filename)) {
+void MainWindow::display(QString filepath, bool updateFilename, bool encrypt) {
+    if (!QFile::exists(filepath)) {
         on_actionNew_triggered();
         return;
     }
-    if (updateFilename)
-        set_filename(filename);
     bool ok; QString password;
-    password = QInputDialog::getText(this, "password", QString("Password for document %1 (leave it blank if this is a plain text document):").arg(io.file_path), QLineEdit::Password, "", &ok);
+    password = QInputDialog::getText(this, "password", QString("Password for document %1 (leave it blank if this is a plain text document):").arg(filepath), QLineEdit::Password, "", &ok);
     if (ok) {
+        if (updateFilename)
+            set_filename(filepath);
         io.key = password.toULong();
-        io.file_path = filename;
+        io.file_path = filepath;
         QString text = io.read();
         ui->textEdit->setPlainText(text);
+        int cursor_pos = history_list->get_entry(filepath).cursor;
+        if (cursor_pos)
+            set_cursor_pos(cursor_pos);
         update_index(text);
         text_connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
     }
@@ -206,17 +138,22 @@ void MainWindow::on_actionNew_triggered() {
     close_current();
     // timer->start();
     set_filename("");
-    ui->textEdit->setPlainText(QString(additional_welcome_message) + help_text + dismiss_reminder);
+    const QString& history_repr = history_list->repr();
+    if (history_repr.isEmpty())
+        ui->textEdit->setPlainText(QString(additional_welcome_message) + help_text_full + dismiss_reminder);
+    else
+        ui->textEdit->setPlainText(QString(history_prompt) + history_repr + help_text_short + dismiss_reminder);
     ui->textEdit->setReadOnly(true);
-//    connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_dismiss_key_pressed()));
 }
 
-void MainWindow::on_actionOpen_triggered() {
+bool MainWindow::on_actionOpen_triggered() {
     QString file = QFileDialog::getOpenFileName(this, "Open a file", "", "Text files(*.enc *.txt)");
     if (!file.isEmpty()) {
         close_current();
         display(file);
+        return true;
     }
+    return false;
 }
 
 void MainWindow::on_actionSave_triggered() {
@@ -299,6 +236,89 @@ void MainWindow::set_filename(QString filename) {
     setWindowTitle(filename.mid(i + (filename[i] == '/')) + " - EncEdit");
 }
 
+void MainWindow::set_cursor_pos(int pos)
+{
+    auto cursor = ui->textEdit->textCursor();
+    cursor.setPosition(pos);
+    ui->textEdit->setTextCursor(cursor);
+}
+
+bool MainWindow::handle_ctrl_key(int key)
+{
+    using namespace Qt;
+    switch (key) {
+        // reserved: ACDKSXZ
+    case Key_H:
+        QMessageBox::information(this, "shotcut help", help_text_full);
+        return true;
+    case Key_S:
+        if (shift_pressed)
+            on_actionSave_As_triggered();
+        else
+            on_actionSave_triggered();
+        return true;
+    case Key_N:
+        on_actionNew_triggered();
+        return true;
+    case Key_O:
+        return on_actionOpen_triggered();
+    case Key_F: {
+            bool ok;
+            QFont font = QFontDialog::getFont(&ok, ui->textEdit->font(), this);
+            if (ok) {
+                setting->setValue("font", font);
+                ui->textEdit->setFont(font);
+            }
+            return ok;
+        }
+    case Key_R: {
+            bool ok;
+            QString regexp = QInputDialog::getText(this, "title regexp", QString("Enter an regexp to match titles in your passage for contents to display:"), QLineEdit::Normal, setting->value("title_regexp").toString(), &ok);
+            if (ok) {
+                setting->setValue("title_regexp", regexp);
+                update_index(ui->textEdit->toPlainText(), regexp);
+            }
+            return ok;
+        }
+    case Key_T:
+        if (ui->listWidget->isHidden())
+            ui->listWidget->show();
+        else    ui->listWidget->hide();
+        return true;
+    case Key_B:
+        hide();
+        setWindowFlag(FramelessWindowHint, !windowFlags().testFlag(FramelessWindowHint));
+        show();
+        return true;
+    case Key_L: {
+        QColor selected = QColorDialog::getColor(black, this, "Font color");
+        if (selected.isValid()) {
+            setting->setValue("font_color", selected.rgb());
+            selected = QColorDialog::getColor(white, this, "Background color");
+            if (selected.isValid()) {
+                setting->setValue("background_color", selected.rgb());
+                update_style();
+                return true;
+            }
+        }
+        return false;
+    }
+    case Key_Left:
+        move(pos().x() - 1, pos().y());
+        return true;
+    case Key_Up:
+        move(pos().x(), pos().y() - 1);
+        return true;
+    case Key_Right:
+        move(pos().x() + 1, pos().y());
+        return true;
+    case Key_Down:
+        move(pos().x(), pos().y() + 1);
+        return true;
+    }
+    return false;
+}
+
 void MainWindow::set_dirty(bool val) {
     if (val == dirty)
         return;
@@ -324,8 +344,10 @@ void MainWindow::close_current() {
             save_current();
     }
     set_dirty(false);
-    QFile autosave(".autosave");
-    autosave.remove();
+    if (io.file_path.size())
+        history_list->update_now(io.file_path, ui->textEdit->textCursor().position());
+//    QFile autosave(".autosave");
+//    autosave.remove();
 }
 
 void MainWindow::save_current(bool saveClean) {
@@ -339,7 +361,7 @@ void MainWindow::save_current(bool saveClean) {
 }
 
 void MainWindow::update_index(const QString& text, const QString& regexp) {
-    index.load(text, regexp.size() ? regexp : config.title_regexp);
+    index.load(text, regexp.size() ? regexp : setting->value("title_regexp").toString());
     ui->listWidget->clear();
     auto& strl = index.string_list();
     ui->listWidget->addItems(strl);
@@ -347,9 +369,21 @@ void MainWindow::update_index(const QString& text, const QString& regexp) {
 }
 
 void MainWindow::update_style() {
-    QString style = QString("{background-color: rgb(%1); color: rgb(%2);}").arg(color2str(config.background_color)).arg(color2str(config.font_color));
+    QString style = QString("{background-color: rgb(%1); color: rgb(%2);}").arg(color2str(setting->value("background_color").toInt())).arg(color2str(setting->value("font_color").toInt()));
     ui->textEdit->setStyleSheet("QPlainTextEdit " + style);
     ui->listWidget->setStyleSheet("QListWidget " + style);
+}
+
+void MainWindow::create_setting() {
+    QString appDataDirPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    appDataDirPath = appDataDirPath.mid(0, appDataDirPath.lastIndexOf('/'));
+    appDataDirPath = appDataDirPath.mid(0, appDataDirPath.lastIndexOf('/'));
+    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, appDataDirPath);
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+    setting = new QSettings(this);
+    for (const auto& conf: default_config)
+        if (!setting->contains(conf.first))
+            setting->setValue(conf.first, conf.second);
 }
 
 void MainWindow::on_listWidget_clicked(const QModelIndex& idx) {

@@ -16,6 +16,7 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 set(PROJECT_SOURCES
             args.h
+            args.cpp
             main.cpp
             mainwindow.cpp
             mainwindow.h
@@ -26,6 +27,8 @@ set(PROJECT_SOURCES
             indexmodel.cpp
             indexmodel.h
             mainwindow.ui
+            historylist.h
+            historylist.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
