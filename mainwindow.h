@@ -7,13 +7,11 @@
 #include "indexmodel.h"
 #include "io.h"
 #include "historylist.h"
-namespace Ui
-{
+namespace Ui {
     class MainWindow;
 }
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
     explicit MainWindow(QWidget* parent = nullptr);
@@ -54,6 +52,7 @@ private:
     void on_actionCut_triggered();
     void on_actionUndo_triggered();
     void on_actionRedo_triggered();
+private slots:
     void on_text_modified();
     void on_listWidget_clicked(const QModelIndex& index);
 };

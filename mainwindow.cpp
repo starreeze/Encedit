@@ -63,8 +63,7 @@ void MainWindow::receive_args(int argc, char* argv[]) {
     }
 }
 
-void MainWindow::post_show()
-{
+void MainWindow::post_show() {
     auto _font = setting->value("font").value<QFont>();
     ui->textEdit->setFont(_font);
     ui->listWidget->setFont(QFont(contents_fontname, contents_fontsize));
@@ -80,7 +79,8 @@ void MainWindow::keyPressEvent(QKeyEvent* keyEvent) {
                     auto history_entry = history_list->get_entry(key - Key_1);
                     display(history_entry.file);
                     ui->textEdit->setReadOnly(false);
-                } catch (QException) { /* do nothing to wait for next input */ }
+                }
+                catch (QException) { /* do nothing to wait for next input */ }
             }
             else if (handle_ctrl_key(key))
                 ui->textEdit->setReadOnly(key != Key_O);
@@ -88,7 +88,7 @@ void MainWindow::keyPressEvent(QKeyEvent* keyEvent) {
         }
         ui->textEdit->clear();
         set_dirty(true);
-        text_connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
+        text_connection = connect(ui->textEdit, &QPlainTextEdit::textChanged, this, &MainWindow::on_text_modified);
         ui->textEdit->setReadOnly(false);
         return;
     }
@@ -129,7 +129,7 @@ void MainWindow::display(QString filepath, bool updateFilename, bool encrypt) {
         if (cursor_pos)
             set_cursor_pos(cursor_pos);
         update_index(text);
-        text_connection = connect(ui->textEdit, SIGNAL(textChanged()), this, SLOT(on_text_modified()));
+        text_connection = connect(ui->textEdit, &QPlainTextEdit::textChanged, this, &MainWindow::on_text_modified);
     }
     else    on_actionNew_triggered();
 }
@@ -236,15 +236,13 @@ void MainWindow::set_filename(QString filename) {
     setWindowTitle(filename.mid(i + (filename[i] == '/')) + " - EncEdit");
 }
 
-void MainWindow::set_cursor_pos(int pos)
-{
+void MainWindow::set_cursor_pos(int pos) {
     auto cursor = ui->textEdit->textCursor();
     cursor.setPosition(pos);
     ui->textEdit->setTextCursor(cursor);
 }
 
-bool MainWindow::handle_ctrl_key(int key)
-{
+bool MainWindow::handle_ctrl_key(int key) {
     using namespace Qt;
     switch (key) {
         // reserved: ACDKSXZ
@@ -263,23 +261,23 @@ bool MainWindow::handle_ctrl_key(int key)
     case Key_O:
         return on_actionOpen_triggered();
     case Key_F: {
-            bool ok;
-            QFont font = QFontDialog::getFont(&ok, ui->textEdit->font(), this);
-            if (ok) {
-                setting->setValue("font", font);
-                ui->textEdit->setFont(font);
-            }
-            return ok;
+        bool ok;
+        QFont font = QFontDialog::getFont(&ok, ui->textEdit->font(), this);
+        if (ok) {
+            setting->setValue("font", font);
+            ui->textEdit->setFont(font);
         }
+        return ok;
+    }
     case Key_R: {
-            bool ok;
-            QString regexp = QInputDialog::getText(this, "title regexp", QString("Enter an regexp to match titles in your passage for contents to display:"), QLineEdit::Normal, setting->value("title_regexp").toString(), &ok);
-            if (ok) {
-                setting->setValue("title_regexp", regexp);
-                update_index(ui->textEdit->toPlainText(), regexp);
-            }
-            return ok;
+        bool ok;
+        QString regexp = QInputDialog::getText(this, "title regexp", QString("Enter an regexp to match titles in your passage for contents to display:"), QLineEdit::Normal, setting->value("title_regexp").toString(), &ok);
+        if (ok) {
+            setting->setValue("title_regexp", regexp);
+            update_index(ui->textEdit->toPlainText(), regexp);
         }
+        return ok;
+    }
     case Key_T:
         if (ui->listWidget->isHidden())
             ui->listWidget->show();
@@ -381,7 +379,7 @@ void MainWindow::create_setting() {
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, appDataDirPath);
     QSettings::setDefaultFormat(QSettings::IniFormat);
     setting = new QSettings(this);
-    for (const auto& conf: default_config)
+    for (const auto& conf : default_config)
         if (!setting->contains(conf.first))
             setting->setValue(conf.first, conf.second);
 }

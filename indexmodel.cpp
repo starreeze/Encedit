@@ -4,10 +4,10 @@
 void IndexModel::load(const QString& content, const QString& regexp) {
     indexList.clear(); indexPos.clear();
     QRegularExpression re(regexp);
-	auto it = re.globalMatch(content);
-	while (it.hasNext()) {
-		QRegularExpressionMatch match = it.next();
-		QString str = match.captured();
+    auto it = re.globalMatch(content);
+    while (it.hasNext()) {
+        QRegularExpressionMatch match = it.next();
+        QString str = match.captured();
         if (regexp == default_title_regexp) {
             // enable pretty printing for diary format
             int i = str.indexOf(' ');
@@ -15,7 +15,7 @@ void IndexModel::load(const QString& content, const QString& regexp) {
             for (i = str.size() - 1; str[i] != ' '; --i);
             str.insert(i, "   ");
         }
-		indexList << str;
-		indexPos << match.capturedStart();
-	}
+        indexList << str;
+        indexPos << match.capturedStart();
+    }
 }
