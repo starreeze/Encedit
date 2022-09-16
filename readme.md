@@ -14,7 +14,7 @@ version 2.4, copywrite (c) 2021~2022 by xsy, GPL v3 LICENSE.
 - customized font;
 - customized background/foreground color;
 - file history and custom settings memorized;
-- simple window design - you can even hide window border;
+- simple window design;
 - ultra-fast - faster than windows notepad in line wrapper mode on 10x scale;
 - extremely low resource usage - usually about 20MB memory occupied;
 - incremental encryption & save to avoid resource waste;
@@ -22,9 +22,9 @@ version 2.4, copywrite (c) 2021~2022 by xsy, GPL v3 LICENSE.
 
 ## Keyboard shotcuts
 
-- Ctrl-<NUM>: open a recent file;
+- Ctrl-\<NUM\>: open a recent file;
 - Ctrl-H: show help on shotcuts;
-- Ctrl-Alt-<ARROW_KEY>: adjust window position;
+- Ctrl-Alt-\<ARROW_KEY\>: adjust window position;
 - Ctrl-A: select all;
 - Ctrl-C: copy;
 - Ctrl-X: cut;
