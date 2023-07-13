@@ -39,7 +39,9 @@ version 2.4, copywrite (c) 2021~2022 by xsy, GPL v3 LICENSE.
 - Ctrl-L: select font color and background color;
 - Ctrl-R: set index match rule (regular expression);
 - Ctrl-T: toggle index (side widget) view;
-- Ctrl-B: toggle frameless mode.
+- Ctrl-B: toggle frameless mode;
+- Ctrl-=: zoom in;
+- Ctrl--: zoom out.
 
 ## Possible usage
 

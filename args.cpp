@@ -11,6 +11,7 @@ const QVector<QPair<QString, QVariant>> default_config {
     {"background_color", default_background_color},
     {"window_size", QVariant::fromValue(default_window_size)},
     {"window_pos", QVariant::fromValue(default_window_pos)},
+    {"splitter_state", QVariant()},
     {"sidebar", true},
     {"frameless", false},
 };

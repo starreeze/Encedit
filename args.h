@@ -52,7 +52,9 @@ LSTR help_text_full =
 "Ctrl - L: select font color and background color;\n"
 "Ctrl - R: set index match rule(regular expression);\n"
 "Ctrl - T: toggle index(side widget) view;\n"
-"Ctrl - B: toggle frameless mode.";
+"Ctrl - B: toggle frameless mode;\n"
+"Ctrl - =: zoom in;\n"
+"Ctrl - -: zoom out.;";
 
 LSTR help_text_short = "\nPress Ctrl - H to show more help.\n";
 LSTR dismiss_reminder = "\nTo start with a blank new file, press any key to dismiss this message...\n";

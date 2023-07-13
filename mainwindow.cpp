@@ -14,6 +14,7 @@
 #include <QStandardItemModel>
 #include <QPlainTextEdit>
 #include <QDebug>
+#include <QVariant>
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
@@ -22,9 +23,17 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->centralWidget->setLayout(ui->horizontalLayout);
     ui->textEdit->setFocus();
     move(setting->value("window_pos").value<QPoint>());
-    resize(setting->value("window_size").value<QSize>());
+    const QSize& window_size = setting->value("window_size").value<QSize>();
+    resize(window_size);
     setWindowFlag(Qt::FramelessWindowHint, setting->value("frameless").toBool());
     ui->listWidget->setHidden(!setting->value("sidebar").toBool());
+    splitter = new QSplitter;
+    ui->horizontalLayout->addWidget(splitter);
+    splitter->addWidget(ui->listWidget);
+    splitter->addWidget(ui->textEdit);
+    QVariant splitter_state = setting->value("splitter_state");
+    if (!splitter_state.isNull())
+        splitter->restoreState(splitter_state.value<QByteArray>());
     // timer = new QTimer(this);
     // timer->setInterval(60000);
     // timer->callOnTimeout(this, &MainWindow::auto_save);
@@ -36,6 +45,7 @@ MainWindow::~MainWindow() {
     setting->setValue("window_size", QVariant::fromValue(size()));
     setting->setValue("frameless", windowFlags().testFlag(Qt::FramelessWindowHint));
     setting->setValue("sidebar", !ui->listWidget->isHidden());
+    setting->setValue("splitter_state", QVariant::fromValue(splitter->saveState()));
     delete history_list;
     delete ui;
 }
@@ -313,6 +323,20 @@ bool MainWindow::handle_ctrl_key(int key) {
     case Key_Down:
         move(pos().x(), pos().y() + 1);
         return true;
+    case Key_Equal: {
+        QFont font = ui->textEdit->font();
+        font.setPointSize(font.pointSize() + 1);
+        setting->setValue("font", font);
+        ui->textEdit->setFont(font);
+        return true;
+    }
+    case Key_Minus: {
+        QFont font = ui->textEdit->font();
+        font.setPointSize(font.pointSize() - 1);
+        setting->setValue("font", font);
+        ui->textEdit->setFont(font);
+        return true;
+    }
     }
     return false;
 }

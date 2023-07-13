@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include <QKeyEvent>
 #include <QSettings>
+#include <QSplitter>
 #include "indexmodel.h"
 #include "io.h"
 #include "historylist.h"
@@ -32,6 +33,7 @@ private:
     QMetaObject::Connection text_connection;
     // QTimer* timer;
     IndexModel index;
+    QSplitter* splitter;
     void set_filename(QString filename);
     void set_cursor_pos(int pos);
     bool handle_ctrl_key(int key); // whether is handled
