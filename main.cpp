@@ -1,11 +1,10 @@
 #include "mainwindow.h"
-#include "historylist.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
-    qRegisterMetaTypeStreamOperators<HLEntry>("HLEntry");
-    qRegisterMetaTypeStreamOperators<QList<HLEntry>>("QList<HLEntry>");
+    // qRegisterMetaTypeStreamOperators<HLEntry>("HLEntry");
+    // qRegisterMetaTypeStreamOperators<QList<HLEntry>>("QList<HLEntry>");
     QApplication a(argc, argv);
     a.setOrganizationName(org_name);
     a.setApplicationName(app_name + QString("_") + version_string);

@@ -30,7 +30,8 @@ QString decrypt(const QByteArray& s, uint64_t key) {
     if (!key)
         return QString::fromUtf8(s);
 	next = key;
-	QString res(s.length() / 2, 0);
+	QString res;
+	res.resize(s.length() / 2);
 	for (int i = 0; i < res.length() / 4; ++i) {
 		uint64_t word = 0;
 		for (int j = 0; j < 8; ++j)

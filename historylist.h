@@ -5,7 +5,7 @@
 #include <QSettings>
 #include <QDataStream>
 
-struct HLEntry {
+struct HLEntry { // history list entry
     QDateTime time;
     QString file;
     quint32 cursor;

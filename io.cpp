@@ -17,9 +17,10 @@ void FileIo::write(const QString& text, bool rewrite_all) {
         int i = 0, original_size = file_text.size(), new_size = text.size();
         for (; i < qMin(new_size, original_size) && file_text[i] == text[i]; ++i);
         file_text.resize(i);
-        file_text.append(text.midRef(i));
+        const QString& new_text = text.mid(i);
+        file_text.append(new_text);
         i -= i % 4;
-        auto modified = encrypt(text.mid(i), key, i / 4);
+        auto modified = encrypt(new_text, key, i / 4);
         i *= 2;
         file.resize(i);
         file.seek(i);
