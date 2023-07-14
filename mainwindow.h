@@ -12,8 +12,11 @@ namespace Ui {
     class MainWindow;
 }
 
+class MWEventHandler;
+
 class MainWindow : public QMainWindow {
-    Q_OBJECT
+    Q_OBJECT;
+    friend class MWEventHandler;
 public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
@@ -21,23 +24,22 @@ public:
     void post_show();
     void keyPressEvent(QKeyEvent* keyEvent);
     void keyReleaseEvent(QKeyEvent* keyEvent);
-//private slots:
-    // void auto_save();
 
 private:
     Ui::MainWindow* ui;
-    FileIo io;
+    FileIo std_file;
+    FileIo autosave_file = { 0, autosave_filepath };
     QSettings* setting;
     HistoryList* history_list;
-    bool dirty = false, ctrl_pressed = false, shift_pressed = false;
+    bool dirty = false;
     QMetaObject::Connection text_connection;
-    // QTimer* timer;
+    QTimer* timer;
     IndexModel index;
     QSplitter* splitter;
+    MWEventHandler* event_handler;
     void set_filename(QString filename);
     void set_cursor_pos(int pos);
-    bool handle_ctrl_key(int key); // whether is handled
-    void display(QString filename, bool updateFilename = true, bool encrypt = true);
+    void display(QString filename, bool updateFilename = true);
     void set_dirty(bool val = true);
     void close_current();
     void save_current(bool saveClean = false);
@@ -56,6 +58,7 @@ private:
     void on_actionRedo_triggered();
 private slots:
     void on_text_modified();
+    void auto_save();
     void on_listWidget_clicked(const QModelIndex& index);
 };
 

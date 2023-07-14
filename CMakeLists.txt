@@ -20,10 +20,11 @@ set(PROJECT_SOURCES
             main.cpp
             mainwindow.cpp
             mainwindow.h
-            crypto.cpp
-            crypto.h
             io.cpp
             io.h
+            mweventhandler.h
+            mweventhandler.cpp
+            # dialog.h
             indexmodel.cpp
             indexmodel.h
             mainwindow.ui

@@ -9,17 +9,8 @@ QString HLEntry::repr() const {
     return file + ": last accessed\t" + time.toString(time_format);
 }
 
-void HistoryList::insert_now(const QString& file, quint32 cursor) {
-    if (data.size() >= max_history_entry_num)
-        data.pop_back();
-    data.push_front({ file, cursor });
-}
-
-HistoryList::HistoryList(QSettings* settings) : setting(settings), data(settings->value("history").value<QList<HLEntry>>()) {
-//    auto history_list = settings->value("history").toList();
-//    for (const QVariant& var: history_list)
-//        data.append(var.value<HLEntry>());
-}
+HistoryList::HistoryList(QSettings* settings) :
+    setting(settings), data(settings->value("history").value<QList<HLEntry>>()) {}
 
 QString HistoryList::repr() {
     QString str;
@@ -29,16 +20,19 @@ QString HistoryList::repr() {
 }
 
 void HistoryList::update_now(const QString& file, quint32 cursor) {
-    // if (cursor == 0)
-    //     throw 0;
-    HLEntry newEntry(file, cursor);
+    if (file == autosave_filepath)
+        return;
+        HLEntry newEntry(file, cursor);
     for (int i = 0; i < data.size(); ++i)
-        if (data[i].file == newEntry.file) {
+        if (data[i].file == newEntry.file) { // if found, update
             data[i] = newEntry;
             std::sort(data.begin(), data.end());
             return;
         }
-    insert_now(file, cursor);
+    // else, insert a new entry
+    if (data.size() >= max_history_entry_num)
+        data.pop_back();
+    data.push_front({ file, cursor });
 }
 
 HLEntry HistoryList::get_entry(const QString& filename) {

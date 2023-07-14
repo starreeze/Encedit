@@ -1,9 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QException>
+#include "mweventhandler.h"
 #include <QInputDialog>
-#include <QFontDialog>
-#include <QColorDialog>
 #include <QFont>
 #include <QColor>
 #include <QDir>
@@ -16,12 +14,11 @@
 #include <QDebug>
 #include <QVariant>
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow), event_handler(new MWEventHandler(this)) {
     ui->setupUi(this);
     create_setting();
     history_list = new HistoryList(setting);
     ui->centralWidget->setLayout(ui->horizontalLayout);
-    ui->textEdit->setFocus();
     move(setting->value("window_pos").value<QPoint>());
     const QSize& window_size = setting->value("window_size").value<QSize>();
     resize(window_size);
@@ -34,9 +31,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     QVariant splitter_state = setting->value("splitter_state");
     if (!splitter_state.isNull())
         splitter->restoreState(splitter_state.value<QByteArray>());
-    // timer = new QTimer(this);
-    // timer->setInterval(60000);
-    // timer->callOnTimeout(this, &MainWindow::auto_save);
+    update_style();
+    ui->textEdit->setFocus();
+    timer = new QTimer(this);
+    timer->setInterval(setting->value("autosave_interval").toInt());
+    timer->callOnTimeout(this, &MainWindow::auto_save);
 }
 
 MainWindow::~MainWindow() {
@@ -46,31 +45,35 @@ MainWindow::~MainWindow() {
     setting->setValue("frameless", windowFlags().testFlag(Qt::FramelessWindowHint));
     setting->setValue("sidebar", !ui->listWidget->isHidden());
     setting->setValue("splitter_state", QVariant::fromValue(splitter->saveState()));
+    setting->setValue("autosave_interval", QVariant::fromValue(timer->interval()));
     delete history_list;
     delete ui;
+    delete event_handler;
 }
 
 void MainWindow::receive_args(int argc, char* argv[]) {
-    // config and history
-    if (argc == 2)
-        display(argv[1]);
-    else {
-        if (history_list->repr().size()) { // not empty history
-            // auto-save
-//            if (QFile::exists(".autosave") &&
-//                QMessageBox::question(this, "Retrive", "Your document was not saved before an unexpected shutdown. Retrive your document?") == QMessageBox::Yes
-//                ) {
-//                set_filename("");
-//                display(".autosave", false);
-//                set_dirty(true);
-//            }
-//            else
-            display(history_list->get_latest().file);
-            update_style();
-        }
-        else
-            on_actionNew_triggered();
+    if (QFile::exists(autosave_filepath) &&
+        QMessageBox::question(
+            this,
+            "Retrieve",
+            "Your document was not saved before an unexpected shutdown.\n"
+            "Retrieve your document?\n"
+            "Note: if you are retrieving a newly created file, enter an empty password in the next step."
+        ) == QMessageBox::Yes) {
+        set_filename("");
+        display(autosave_filepath, false);
+        set_dirty(true);
+        return;
     }
+    if (argc == 2) { // explicitly open file
+        display(argv[1]);
+        return;
+    }
+    if (history_list->repr().size()) { // not empty history
+        display(history_list->get_latest().file);
+        return;
+    }
+    on_actionNew_triggered();
 }
 
 void MainWindow::post_show() {
@@ -80,48 +83,14 @@ void MainWindow::post_show() {
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* keyEvent) {
-    using namespace Qt;
-    auto key = keyEvent->key();
-    if (ui->textEdit->isReadOnly() && key != Key_Control && key != Key_Shift && key != Key_Alt && key != Key_CapsLock && key != Key_Super_L) {
-        if (ctrl_pressed) {
-            if (key >= Key_1 && key <= Key_9) {
-                try { // index out of range
-                    auto history_entry = history_list->get_entry(key - Key_1);
-                    display(history_entry.file);
-                    ui->textEdit->setReadOnly(false);
-                }
-                catch (QException) { /* do nothing to wait for next input */ }
-            }
-            else if (handle_ctrl_key(key))
-                ui->textEdit->setReadOnly(key != Key_O);
-            return;
-        }
-        ui->textEdit->clear();
-        set_dirty(true);
-        text_connection = connect(ui->textEdit, &QPlainTextEdit::textChanged, this, &MainWindow::on_text_modified);
-        ui->textEdit->setReadOnly(false);
-        return;
-    }
-    if (key == Key_Control)
-        ctrl_pressed = true;
-    else if (key == Key_Shift)
-        shift_pressed = true;
-    else if (ctrl_pressed)
-        handle_ctrl_key(key);
+    event_handler->key_press_handler(keyEvent);
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* keyEvent) {
-    switch (keyEvent->key()) {
-    case Qt::Key_Control:
-        ctrl_pressed = false;
-        break;
-    case Qt::Key_Shift:
-        shift_pressed = false;
-        break;
-    }
+    event_handler->key_release_handler(keyEvent);
 }
 
-void MainWindow::display(QString filepath, bool updateFilename, bool encrypt) {
+void MainWindow::display(QString filepath, bool updateFilename) {
     if (!QFile::exists(filepath)) {
         on_actionNew_triggered();
         return;
@@ -131,29 +100,31 @@ void MainWindow::display(QString filepath, bool updateFilename, bool encrypt) {
     if (ok) {
         if (updateFilename)
             set_filename(filepath);
-        io.key = password.toULong();
-        io.file_path = filepath;
-        QString text = io.read();
+        std_file.file_path = filepath;
+        uint64_t key = password.toULong();
+        autosave_file.update_key(key);
+        std_file.update_key(key);
+        QString text = std_file.read();
         ui->textEdit->setPlainText(text);
         int cursor_pos = history_list->get_entry(filepath).cursor;
         if (cursor_pos)
             set_cursor_pos(cursor_pos);
         update_index(text);
         text_connection = connect(ui->textEdit, &QPlainTextEdit::textChanged, this, &MainWindow::on_text_modified);
+        timer->start();
     }
     else    on_actionNew_triggered();
 }
 
 void MainWindow::on_actionNew_triggered() {
     close_current();
-    // timer->start();
     set_filename("");
     const QString& history_repr = history_list->repr();
     if (history_repr.isEmpty())
         ui->textEdit->setPlainText(QString(additional_welcome_message) + help_text_full + dismiss_reminder);
     else
         ui->textEdit->setPlainText(QString(history_prompt) + history_repr + help_text_short + dismiss_reminder);
-    ui->textEdit->setReadOnly(true);
+    ui->textEdit->setReadOnly(true); // TODO: unable to reset after pressing ctrl-H
 }
 
 bool MainWindow::on_actionOpen_triggered() {
@@ -172,10 +143,17 @@ void MainWindow::on_actionSave_triggered() {
 
 void MainWindow::on_actionSave_As_triggered() {
     QString file = QFileDialog::getSaveFileName(this, "Save as", "my.enc", "Text files(*.enc *.txt)");
+    if (file.endsWith(autosave_filepath)) {
+        QMessageBox::warning(this, "Invalid filepath", "File ending with '.autosave' is not allowed!");
+        on_actionSave_As_triggered();
+        return;
+    }
     if (!file.isEmpty()) {
         set_filename(file);
-        if (file.endsWith(".txt"))
-            io.key = 0;
+        if (file.endsWith(".txt")) {
+            autosave_file.update_key(0);
+            std_file.update_key(0);
+        }
         else {
             QString confirm_password, password;
             while (true) {
@@ -191,7 +169,9 @@ void MainWindow::on_actionSave_As_triggered() {
                 else
                     break;
             }
-            io.key = password.toULong();
+            uint64_t key = password.toULong();
+            autosave_file.update_key(key);
+            std_file.update_key(key);
         }
         QFile _file(file);
         _file.open(QIODevice::WriteOnly);
@@ -224,22 +204,13 @@ void MainWindow::on_text_modified() {
     set_dirty(true);
 }
 
-// void MainWindow::auto_save() {
-//     QString text = ui->textEdit->toPlainText();
-//     update_index(text);
-    /* !autosave disabled to improve performance */
-    // if (!dirty) return;
-    // QFile sFile(".autosave");
-    // if (sFile.open(QFile::WriteOnly)) {
-    //     sFile.write(encript(text, config.password));
-    //     sFile.close();
-    // }
-    // else
-    //     QMessageBox::critical(this, "Failure", "Cannot write file; please check permissions.");
-// }
+void MainWindow::auto_save() {
+    QString text = ui->textEdit->toPlainText();
+    autosave_file.write(text);
+}
 
 void MainWindow::set_filename(QString filename) {
-    io.file_path = filename;
+    std_file.file_path = filename;
     int i = filename.length();
     if (!i)   filename = "new*";
     while (i && filename[--i] != '/');
@@ -250,95 +221,6 @@ void MainWindow::set_cursor_pos(int pos) {
     auto cursor = ui->textEdit->textCursor();
     cursor.setPosition(pos);
     ui->textEdit->setTextCursor(cursor);
-}
-
-bool MainWindow::handle_ctrl_key(int key) {
-    using namespace Qt;
-    switch (key) {
-        // reserved: ACDKSXZ
-    case Key_H:
-        QMessageBox::information(this, "shotcut help", help_text_full);
-        return true;
-    case Key_S:
-        if (shift_pressed)
-            on_actionSave_As_triggered();
-        else
-            on_actionSave_triggered();
-        return true;
-    case Key_N:
-        on_actionNew_triggered();
-        return true;
-    case Key_O:
-        return on_actionOpen_triggered();
-    case Key_F: {
-        bool ok;
-        QFont font = QFontDialog::getFont(&ok, ui->textEdit->font(), this);
-        if (ok) {
-            setting->setValue("font", font);
-            ui->textEdit->setFont(font);
-        }
-        return ok;
-    }
-    case Key_R: {
-        bool ok;
-        QString regexp = QInputDialog::getText(this, "title regexp", QString("Enter an regexp to match titles in your passage for contents to display:"), QLineEdit::Normal, setting->value("title_regexp").toString(), &ok);
-        if (ok) {
-            setting->setValue("title_regexp", regexp);
-            update_index(ui->textEdit->toPlainText(), regexp);
-        }
-        return ok;
-    }
-    case Key_T:
-        if (ui->listWidget->isHidden())
-            ui->listWidget->show();
-        else    ui->listWidget->hide();
-        return true;
-    case Key_B:
-        hide();
-        setWindowFlag(FramelessWindowHint, !windowFlags().testFlag(FramelessWindowHint));
-        show();
-        return true;
-    case Key_L: {
-        QColor selected = QColorDialog::getColor(black, this, "Font color");
-        if (selected.isValid()) {
-            setting->setValue("font_color", selected.rgb());
-            selected = QColorDialog::getColor(white, this, "Background color");
-            if (selected.isValid()) {
-                setting->setValue("background_color", selected.rgb());
-                update_style();
-                return true;
-            }
-        }
-        return false;
-    }
-    case Key_Left:
-        move(pos().x() - 1, pos().y());
-        return true;
-    case Key_Up:
-        move(pos().x(), pos().y() - 1);
-        return true;
-    case Key_Right:
-        move(pos().x() + 1, pos().y());
-        return true;
-    case Key_Down:
-        move(pos().x(), pos().y() + 1);
-        return true;
-    case Key_Equal: {
-        QFont font = ui->textEdit->font();
-        font.setPointSize(font.pointSize() + 1);
-        setting->setValue("font", font);
-        ui->textEdit->setFont(font);
-        return true;
-    }
-    case Key_Minus: {
-        QFont font = ui->textEdit->font();
-        font.setPointSize(font.pointSize() - 1);
-        setting->setValue("font", font);
-        ui->textEdit->setFont(font);
-        return true;
-    }
-    }
-    return false;
 }
 
 void MainWindow::set_dirty(bool val) {
@@ -359,25 +241,28 @@ void MainWindow::set_dirty(bool val) {
 }
 
 void MainWindow::close_current() {
-    disconnect(text_connection); // timer->stop();
+    disconnect(text_connection);
+    timer->stop();
     if (dirty && !ui->textEdit->toPlainText().isEmpty()) {
         auto response = QMessageBox::question(this, "Save", "Save your document?");
         if (response == QMessageBox::Yes)
             save_current();
     }
     set_dirty(false);
-    if (io.file_path.size())
-        history_list->update_now(io.file_path, ui->textEdit->textCursor().position());
-//    QFile autosave(".autosave");
-//    autosave.remove();
+    if (std_file.file_path.size())
+        history_list->update_now(std_file.file_path, ui->textEdit->textCursor().position());
+    QFile::remove(autosave_filepath);
 }
 
 void MainWindow::save_current(bool saveClean) {
+    // TODO: immediately close after saving and the cursor position won't be saved
     if (!dirty && !saveClean)
         return;
-    if (!QFile::exists(io.file_path))
+    if (!QFile::exists(std_file.file_path) || std_file.file_path == autosave_filepath) {
         on_actionSave_As_triggered();
-    io.write(ui->textEdit->toPlainText(), saveClean);
+        return;
+    }
+    std_file.write(ui->textEdit->toPlainText(), saveClean);
     set_dirty(false);
     update_index(ui->textEdit->toPlainText());
 }

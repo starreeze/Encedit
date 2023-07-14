@@ -9,11 +9,12 @@
 
 typedef const char* const LSTR;
 
-constexpr int default_text_fontsize = 18, contents_fontsize = 12, max_history_entry_num = 9;
+constexpr int default_text_fontsize = 18, contents_fontsize = 12, max_history_entry_num = 9, default_max_autosave_filesize_kb = 1024, default_autosave_interval_s = 60;
 LSTR default_text_fontname = "Microsoft YaHei";
 LSTR contents_fontname = "Consolas";
+LSTR autosave_filepath = ".autosave";
 
-constexpr QRgb default_font_color = qRgb(0,0,0), default_background_color = qRgb(255,255,255);
+constexpr QRgb default_font_color = qRgb(0, 0, 0), default_background_color = qRgb(255, 255, 255);
 
 constexpr QSize default_window_size(1600, 900);
 constexpr QPoint default_window_pos(100, 100);
@@ -22,7 +23,7 @@ constexpr bool default_sidebar_status = true, default_frameless_status = false;
 
 LSTR org_name = "Xsy";
 LSTR app_name = "Encedit";
-LSTR version_string = "v2.4";
+LSTR version_string = "v2.5";
 
 // 2021.7.24 Sat <weather>
 LSTR default_title_regexp = "\\d{4}(\\.\\d{1,2}){2} \\w{3} .";

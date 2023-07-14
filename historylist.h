@@ -26,14 +26,14 @@ inline QDataStream& operator>>(QDataStream& in, HLEntry& v) {
 class HistoryList {
     QList<HLEntry> data;
     QSettings* setting;
-    void insert_now(const QString& file, quint32 cursor);
 public:
     HistoryList(QSettings* settings);
     QString repr(); // sort before return
     inline const HLEntry& get_latest() const {return data[0];}
     void update_now(const QString& file, quint32 cursor);
     HLEntry get_entry(const QString& filename);
-    inline const HLEntry& get_entry(int idx) const {return data[idx];}
+    inline const HLEntry& get_entry(int idx) const { return data[idx]; }
+    inline const int get_size() const { return data.size(); }
     ~HistoryList();
 };
 
