@@ -32,10 +32,24 @@ set(PROJECT_SOURCES
             historylist.cpp
 )
 
+set(app_icon_resource_windows "")
+
+IF (CMAKE_SYSTEM_NAME MATCHES "Linux") 
+    MESSAGE(STATUS "current platform: Linux ") 
+ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows") 
+    MESSAGE(STATUS "current platform: Windows")
+    set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/icon.rc")
+ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Darwin") 
+    MESSAGE(STATUS "current platform: Mac OS X") 
+ELSE () 
+    MESSAGE(STATUS "other platform: ${CMAKE_SYSTEM_NAME}") 
+ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux") 
+
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(encedit
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        ${app_icon_resource_windows}
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET encedit APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -51,6 +65,7 @@ else()
     else()
         add_executable(encedit
             ${PROJECT_SOURCES}
+            ${app_icon_resource_windows}
         )
     endif()
 endif()
@@ -58,7 +73,7 @@ endif()
 target_link_libraries(encedit PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
 set_target_properties(encedit PROPERTIES
-    MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
+    MACOSX_BUNDLE_GUI_IDENTIFIER encedit.xsy
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
 )

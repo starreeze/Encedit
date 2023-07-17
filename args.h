@@ -31,8 +31,8 @@ LSTR default_title_regexp = "\\d{4}(\\.\\d{1,2}){2} \\w{3} .";
 LSTR time_format = "yyyy.MM.dd hh:mm";
 
 LSTR additional_welcome_message =
-"Welcome to encedit!\n"
-"The following content is the shotcut you should know.\n"
+"Welcome to EncEdit!\n"
+"The following content is the shortcut you should know.\n"
 "But don't worry if you can't remember;\n"
 "you can always press Ctrl-H to show this help.\n";
 
@@ -54,12 +54,13 @@ LSTR help_text_full =
 "Ctrl - R: set index match rule(regular expression);\n"
 "Ctrl - T: toggle index(side widget) view;\n"
 "Ctrl - B: toggle frameless mode;\n"
+"Ctrl - M: set autosave file size limit and interval;\n"
 "Ctrl - =: zoom in;\n"
-"Ctrl - -: zoom out.;";
+"Ctrl - -: zoom out.";
 
 LSTR help_text_short = "\nPress Ctrl - H to show more help.\n";
 LSTR dismiss_reminder = "\nTo start with a blank new file, press any key to dismiss this message...\n";
-LSTR history_prompt = "Recent files (press Crtl - <NUM> to open the corresponding file):\n";
+LSTR history_prompt = "Recent files (press Ctrl - <NUM> to open the corresponding file):\n";
 
 extern const QVector<QPair<QString, QVariant>> default_config;
 

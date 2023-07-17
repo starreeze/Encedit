@@ -58,7 +58,8 @@ void MainWindow::receive_args(int argc, char* argv[]) {
             "Retrieve",
             "Your document was not saved before an unexpected shutdown.\n"
             "Retrieve your document?\n"
-            "Note: if you are retrieving a newly created file, enter an empty password in the next step."
+            "Note: original password is needed.\n"
+            "If you are retrieving a newly created file, enter an empty password."
         ) == QMessageBox::Yes) {
         set_filename("");
         display(autosave_filepath, false);

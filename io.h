@@ -10,7 +10,7 @@ QString decrypt(const QByteArray& s, uint64_t key);
 
 class FileIo {
 public:
-    QString file_text, file_path;
+    QString buffer, file_path;
     FileIo() {}
     FileIo(uint64_t crypt_key, const QString& filename) :
         file_path(filename), key(crypt_key) {}

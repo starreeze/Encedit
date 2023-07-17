@@ -37,8 +37,10 @@ private:
     IndexModel index;
     QSplitter* splitter;
     MWEventHandler* event_handler;
+    // update std_file name and window title
     void set_filename(QString filename);
     void set_cursor_pos(int pos);
+    // request password input, read text and then display
     void display(QString filename, bool updateFilename = true);
     void set_dirty(bool val = true);
     void close_current();

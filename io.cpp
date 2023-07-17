@@ -52,7 +52,7 @@ QString FileIo::read() {
     file.open(QFile::ReadOnly);
     QByteArray content = file.readAll();
     file.close();
-    return file_text = decrypt(content, key);
+    return buffer = decrypt(content, key);
 }
 
 void FileIo::write(const QString& text, bool rewrite_all) {
@@ -62,10 +62,10 @@ void FileIo::write(const QString& text, bool rewrite_all) {
         file.write(encrypt(text, key));
     }
     else {
-        int i = 0, original_size = file_text.size(), new_size = text.size();
-        for (; i < qMin(new_size, original_size) && file_text[i] == text[i]; ++i);
-        file_text.resize(i);
-        file_text.append(text.mid(i));
+        int i = 0, original_size = buffer.size(), new_size = text.size();
+        for (; i < qMin(new_size, original_size) && buffer[i] == text[i]; ++i);
+        buffer.resize(i);
+        buffer.append(text.mid(i));
         i -= i % 4;
         auto modified = encrypt(text.mid(i), key, i / 4);
         if (modified.isEmpty())
@@ -80,7 +80,7 @@ void FileIo::write(const QString& text, bool rewrite_all) {
 
 void FileIo::update_key(uint64_t crypt_key) {
     key = crypt_key;
-    file_text.clear();
+    buffer.clear();
 }
 
 QString color2str(QRgb color) {
