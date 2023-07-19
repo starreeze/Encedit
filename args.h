@@ -9,7 +9,7 @@
 
 typedef const char* const LSTR;
 
-constexpr int default_text_fontsize = 18, contents_fontsize = 12, max_history_entry_num = 9, default_max_autosave_filesize_kb = 1024, default_autosave_interval_s = 60;
+constexpr int default_text_fontsize = 18, contents_fontsize = 12, max_history_entry_num = 9, default_max_autosave_filesize_kb = 1024, default_autosave_interval_s = 60, statusbar_message_timeout_s = 0, cursor_recover_delay_ms = 100;
 LSTR default_text_fontname = "Microsoft YaHei";
 LSTR contents_fontname = "Consolas";
 LSTR autosave_filepath = ".autosave";
@@ -23,12 +23,13 @@ constexpr bool default_sidebar_status = true, default_frameless_status = false;
 
 LSTR org_name = "Xsy";
 LSTR app_name = "Encedit";
-LSTR version_string = "v2.5";
+LSTR version_string = "v2.6";
 
 // 2021.7.24 Sat <weather>
 LSTR default_title_regexp = "\\d{4}(\\.\\d{1,2}){2} \\w{3} .";
 
-LSTR time_format = "yyyy.MM.dd hh:mm";
+LSTR history_time_format = "yyyy.MM.dd hh:mm";
+LSTR status_time_format = "hh:mm:ss";
 
 LSTR additional_welcome_message =
 "Welcome to EncEdit!\n"

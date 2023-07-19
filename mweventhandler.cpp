@@ -126,6 +126,11 @@ bool MWEventHandler::ctrl_key_handler(int key) {
 		}
 		return false;
 	}
+	case Key_U:
+		if (object->ui->statusBar->isHidden())
+			object->ui->statusBar->show();
+		else    object->ui->statusBar->hide();
+		return true;
 	case Key_Left:
 		object->move(object->pos().x() - 1, object->pos().y());
 		return true;

@@ -1,5 +1,5 @@
 #include "args.h"
-#include "historylist.h"
+#include "io.h"
 #include <QList>
 #include <QFont>
 
@@ -12,8 +12,9 @@ const QVector<QPair<QString, QVariant>> default_config {
     {"window_size", QVariant::fromValue(default_window_size)},
     {"window_pos", QVariant::fromValue(default_window_pos)},
     {"splitter_state", QVariant()},
-    {"max_autosave_size", QVariant::fromValue(default_max_autosave_filesize_kb)},
-    {"autosave_interval", QVariant::fromValue(default_autosave_interval_s * 1000)},
+    {"max_autosave_size", default_max_autosave_filesize_kb},
+    {"autosave_interval", default_autosave_interval_s * 1000},
     {"sidebar", true},
+    {"statusbar", true},
     {"frameless", false},
 };

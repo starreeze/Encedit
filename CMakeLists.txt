@@ -28,8 +28,8 @@ set(PROJECT_SOURCES
             indexmodel.cpp
             indexmodel.h
             mainwindow.ui
-            historylist.h
-            historylist.cpp
+            # historylist.h
+            # historylist.cpp
 )
 
 set(app_icon_resource_windows "")

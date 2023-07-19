@@ -3,20 +3,15 @@
 #include "mweventhandler.h"
 #include <QInputDialog>
 #include <QFont>
-#include <QColor>
 #include <QDir>
 #include <QStyle>
-#include <QStandardPaths>
 #include <QMessageBox>
 #include <QTimer>
 #include <QStandardItemModel>
 #include <QPlainTextEdit>
-#include <QDebug>
-#include <QVariant>
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow), event_handler(new MWEventHandler(this)) {
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow), event_handler(new MWEventHandler(this)), setting(new MWSettings(this)) {
     ui->setupUi(this);
-    create_setting();
     history_list = new HistoryList(setting);
     ui->centralWidget->setLayout(ui->horizontalLayout);
     move(setting->value("window_pos").value<QPoint>());
@@ -24,6 +19,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     resize(window_size);
     setWindowFlag(Qt::FramelessWindowHint, setting->value("frameless").toBool());
     ui->listWidget->setHidden(!setting->value("sidebar").toBool());
+    ui->statusBar->setHidden(!setting->value("statusbar").toBool());
     splitter = new QSplitter;
     ui->horizontalLayout->addWidget(splitter);
     splitter->addWidget(ui->listWidget);
@@ -36,30 +32,26 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     timer = new QTimer(this);
     timer->setInterval(setting->value("autosave_interval").toInt());
     timer->callOnTimeout(this, &MainWindow::auto_save);
+    // TODO: icon
 }
 
 MainWindow::~MainWindow() {
     close_current();
-    setting->setValue("window_pos", QVariant::fromValue(pos()));
-    setting->setValue("window_size", QVariant::fromValue(size()));
-    setting->setValue("frameless", windowFlags().testFlag(Qt::FramelessWindowHint));
-    setting->setValue("sidebar", !ui->listWidget->isHidden());
-    setting->setValue("splitter_state", QVariant::fromValue(splitter->saveState()));
-    setting->setValue("autosave_interval", QVariant::fromValue(timer->interval()));
+    setting->save();
     delete history_list;
-    delete ui;
     delete event_handler;
+    delete ui;
 }
 
 void MainWindow::receive_args(int argc, char* argv[]) {
     if (QFile::exists(autosave_filepath) &&
         QMessageBox::question(
-            this,
-            "Retrieve",
-            "Your document was not saved before an unexpected shutdown.\n"
-            "Retrieve your document?\n"
-            "Note: original password is needed.\n"
-            "If you are retrieving a newly created file, enter an empty password."
+        this,
+        "Retrieve",
+        "Your document was not saved before an unexpected shutdown.\n"
+        "Retrieve your document?\n"
+        "Note: original password is needed.\n"
+        "If you are retrieving a newly created file, enter an empty password."
         ) == QMessageBox::Yes) {
         set_filename("");
         display(autosave_filepath, false);
@@ -108,8 +100,12 @@ void MainWindow::display(QString filepath, bool updateFilename) {
         QString text = std_file.read();
         ui->textEdit->setPlainText(text);
         int cursor_pos = history_list->get_entry(filepath).cursor;
-        if (cursor_pos)
-            set_cursor_pos(cursor_pos);
+        if (cursor_pos) {
+            QTimer::singleShot(cursor_recover_delay_ms, this, [this, cursor_pos]() {
+                set_cursor_pos(cursor_pos);
+                log(QString("recovered last-viewed position: %1").arg(cursor_pos));
+            });
+        }
         update_index(text);
         text_connection = connect(ui->textEdit, &QPlainTextEdit::textChanged, this, &MainWindow::on_text_modified);
         timer->start();
@@ -125,7 +121,7 @@ void MainWindow::on_actionNew_triggered() {
         ui->textEdit->setPlainText(QString(additional_welcome_message) + help_text_full + dismiss_reminder);
     else
         ui->textEdit->setPlainText(QString(history_prompt) + history_repr + help_text_short + dismiss_reminder);
-    ui->textEdit->setReadOnly(true); // TODO: unable to reset after pressing ctrl-H
+    ui->textEdit->setReadOnly(true);
 }
 
 bool MainWindow::on_actionOpen_triggered() {
@@ -140,6 +136,11 @@ bool MainWindow::on_actionOpen_triggered() {
 
 void MainWindow::on_actionSave_triggered() {
     save_current();
+}
+
+void MainWindow::log(const QString& message, int timeout) {
+    const QString& time = QDateTime::currentDateTime().toString(status_time_format);
+    ui->statusBar->showMessage(time + " -- " + message, timeout * 1000);
 }
 
 void MainWindow::on_actionSave_As_triggered() {
@@ -159,7 +160,7 @@ void MainWindow::on_actionSave_As_triggered() {
             QString confirm_password, password;
             while (true) {
                 bool ok;
-                password = QInputDialog::getText(this, "password", QString("A digit password to encript document %1 (leave it blank if you don't want encryption):").arg(file), QLineEdit::Password, "", &ok);
+                password = QInputDialog::getText(this, "password", QString("A digit password to encrypt document %1 (leave it blank if you don't want encryption):").arg(file), QLineEdit::Password, "", &ok);
                 if (!ok)    return;
                 if (password.isEmpty())
                     break;
@@ -182,22 +183,27 @@ void MainWindow::on_actionSave_As_triggered() {
 }
 
 void MainWindow::on_actionCopy_triggered() {
+    log("copied.");
     ui->textEdit->copy();
 }
 
 void MainWindow::on_actionPaste_triggered() {
+    log("pasted.");
     ui->textEdit->paste();
 }
 
 void MainWindow::on_actionCut_triggered() {
+    log("cut.");
     ui->textEdit->cut();
 }
 
 void MainWindow::on_actionUndo_triggered() {
+    log("undo.");
     ui->textEdit->undo();
 }
 
 void MainWindow::on_actionRedo_triggered() {
+    log("redo.");
     ui->textEdit->redo();
 }
 
@@ -206,8 +212,14 @@ void MainWindow::on_text_modified() {
 }
 
 void MainWindow::auto_save() {
+    if (!dirty)
+        return;
+    log("autosaving...");
     QString text = ui->textEdit->toPlainText();
-    autosave_file.write(text);
+    if (autosave_file.write(text))
+        log("autosaved.");
+    else
+        log("nothing to save.");
 }
 
 void MainWindow::set_filename(QString filename) {
@@ -220,6 +232,8 @@ void MainWindow::set_filename(QString filename) {
 
 void MainWindow::set_cursor_pos(int pos) {
     auto cursor = ui->textEdit->textCursor();
+    cursor.setPosition(ui->textEdit->toPlainText().size());
+    ui->textEdit->setTextCursor(cursor);
     cursor.setPosition(pos);
     ui->textEdit->setTextCursor(cursor);
 }
@@ -256,16 +270,19 @@ void MainWindow::close_current() {
 }
 
 void MainWindow::save_current(bool saveClean) {
-    // TODO: immediately close after saving and the cursor position won't be saved
-    if (!dirty && !saveClean)
+    if (!dirty && !saveClean) {
+        log("nothing to save.");
         return;
+    }
     if (!QFile::exists(std_file.file_path) || std_file.file_path == autosave_filepath) {
         on_actionSave_As_triggered();
         return;
     }
-    std_file.write(ui->textEdit->toPlainText(), saveClean);
+    log("saving file to: " + std_file.file_path);
     set_dirty(false);
     update_index(ui->textEdit->toPlainText());
+    std_file.write(ui->textEdit->toPlainText(), saveClean);
+    log("file saved to: " + std_file.file_path);
 }
 
 void MainWindow::update_index(const QString& text, const QString& regexp) {
@@ -282,22 +299,6 @@ void MainWindow::update_style() {
     ui->listWidget->setStyleSheet("QListWidget " + style);
 }
 
-void MainWindow::create_setting() {
-    QString appDataDirPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    appDataDirPath = appDataDirPath.mid(0, appDataDirPath.lastIndexOf('/'));
-    appDataDirPath = appDataDirPath.mid(0, appDataDirPath.lastIndexOf('/'));
-    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, appDataDirPath);
-    QSettings::setDefaultFormat(QSettings::IniFormat);
-    setting = new QSettings(this);
-    for (const auto& conf : default_config)
-        if (!setting->contains(conf.first))
-            setting->setValue(conf.first, conf.second);
-}
-
 void MainWindow::on_listWidget_clicked(const QModelIndex& idx) {
-    auto cursor = ui->textEdit->textCursor();
-    cursor.setPosition(ui->textEdit->toPlainText().size());
-    ui->textEdit->setTextCursor(cursor);
-    cursor.setPosition(index[idx]);
-    ui->textEdit->setTextCursor(cursor);
+    set_cursor_pos(index[idx]);
 }

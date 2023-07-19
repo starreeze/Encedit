@@ -3,11 +3,9 @@
 #include <QMainWindow>
 #include <QFileDialog>
 #include <QKeyEvent>
-#include <QSettings>
 #include <QSplitter>
 #include "indexmodel.h"
 #include "io.h"
-#include "historylist.h"
 namespace Ui {
     class MainWindow;
 }
@@ -17,6 +15,7 @@ class MWEventHandler;
 class MainWindow : public QMainWindow {
     Q_OBJECT;
     friend class MWEventHandler;
+    friend class MWSettings;
 public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
@@ -29,7 +28,7 @@ private:
     Ui::MainWindow* ui;
     FileIo std_file;
     FileIo autosave_file = { 0, autosave_filepath };
-    QSettings* setting;
+    MWSettings* setting;
     HistoryList* history_list;
     bool dirty = false;
     QMetaObject::Connection text_connection;
@@ -48,6 +47,7 @@ private:
     void update_index(const QString& text, const QString& regexp = "");
     void update_style();
     void create_setting();
+    void log(const QString& message, int timeout = statusbar_message_timeout_s);
 
     void on_actionNew_triggered();
     bool on_actionOpen_triggered();
