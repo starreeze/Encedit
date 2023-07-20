@@ -32,7 +32,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     timer = new QTimer(this);
     timer->setInterval(setting->value("autosave_interval").toInt());
     timer->callOnTimeout(this, &MainWindow::auto_save);
-    // TODO: icon
 }
 
 MainWindow::~MainWindow() {
@@ -180,31 +179,6 @@ void MainWindow::on_actionSave_As_triggered() {
         _file.close();
         save_current(true);
     }
-}
-
-void MainWindow::on_actionCopy_triggered() {
-    log("copied.");
-    ui->textEdit->copy();
-}
-
-void MainWindow::on_actionPaste_triggered() {
-    log("pasted.");
-    ui->textEdit->paste();
-}
-
-void MainWindow::on_actionCut_triggered() {
-    log("cut.");
-    ui->textEdit->cut();
-}
-
-void MainWindow::on_actionUndo_triggered() {
-    log("undo.");
-    ui->textEdit->undo();
-}
-
-void MainWindow::on_actionRedo_triggered() {
-    log("redo.");
-    ui->textEdit->redo();
 }
 
 void MainWindow::on_text_modified() {

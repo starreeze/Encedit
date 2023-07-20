@@ -4,7 +4,7 @@
 
 Encedit - a simple and elegant plain text editor: write down anything while secured by encryption!
 
-version 2.5, copyright (c) 2021~2023 by xsy, GPL v3 LICENSE.
+version 2.6, copyright (c) 2021~2023 by xsy, GPL v3 LICENSE.
 
 ## Features
 
@@ -84,3 +84,4 @@ Enjoy!
 - v2.3: 2022.8.23 - new feature: direct open mode w/o encryption; optimization: improve docs & inline welcome message
 - v2.4: 2022.9.9 - bugfix: 4+ bugs in v2.3; new feature: history list & manual window position minor adjust; optimization: improved custom config management
 - v2.5: 2023.7.17 - bugfix: 3+ bugs in v2.4; new feature: zoom & autosave; optimization: sidebar adjustable & typos in doc
+- v2.6: 2023.7.20 - bugfix: 2+ bugs in v2.5; new feature: statusbar; optimization: code reconstruction & typos in doc

@@ -62,7 +62,7 @@ bool MWEventHandler::ctrl_key_handler(int key) {
 	switch (key) {
 		// reserved: ACDKSXZ
 	case Key_H:
-		QMessageBox::information(object, "shotcut help", help_text_full);
+		QMessageBox::information(object, "shortcut help", help_text_full);
 		return true;
 	case Key_S:
 		if (shift_pressed)

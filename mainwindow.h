@@ -53,11 +53,6 @@ private:
     bool on_actionOpen_triggered();
     void on_actionSave_triggered();
     void on_actionSave_As_triggered();
-    void on_actionCopy_triggered();
-    void on_actionPaste_triggered();
-    void on_actionCut_triggered();
-    void on_actionUndo_triggered();
-    void on_actionRedo_triggered();
 private slots:
     void on_text_modified();
     void auto_save();
