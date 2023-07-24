@@ -7,26 +7,34 @@
 #include <QSettings>
 #include <QDateTime>
 #include <QColor>
+#include "aes.h"
+#include "args.h"
 // all operations interacting with disk IO
 // text file save & load with encryption; configuration management
 
 class MainWindow;
 
-QByteArray encrypt(const QString& s, uint64_t key, int skip_times = 0);
-QString decrypt(const QByteArray& s, uint64_t key);
+class Cipher {
+    QByteArray key;
+    QAESEncryption aes_cipher = { QAESEncryption::Aes(aes_type), QAESEncryption::ECB };
+public:
+    inline Cipher() {}
+    inline Cipher(const QString& crypt_key) { if (!crypt_key.isEmpty()) update_key(crypt_key); }
+    inline QByteArray encrypt(const QString& s);
+    inline QString decrypt(const QByteArray& s);
+    void update_key(const QString& crypt_key);
+};
 
 class FileIo {
+    Cipher cipher;
 public:
     QString buffer, file_path;
     FileIo() {}
-    FileIo(uint64_t crypt_key, const QString& filename) :
-        file_path(filename), key(crypt_key) {}
+    FileIo(const QString& crypt_key, const QString& filename) : file_path(filename), cipher(crypt_key) {}
     QString read();
     // return if actually write something
     bool write(const QString& text, bool rewrite_all = false);
-    void update_key(uint64_t crypt_key);
-private:
-    uint64_t key;
+    void update_key(const QString& crypt_key);
 };
 
 class MWSettings : public QSettings {

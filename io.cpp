@@ -4,51 +4,21 @@
 #include <QStandardPaths>
 #include <QTimer>
 
-uint64_t next;
-static uint64_t myrand() {
-    return next = next * 1103515245 + 12345;
+inline QByteArray Cipher::encrypt(const QString& s) {
+    const QByteArray& data = s.toUtf8();
+    if (key.isEmpty())
+        return data;
+    return aes_cipher.encode(data, key);
 }
 
-QByteArray encrypt(const QString& str, uint64_t key, int skip_times) {
-    if (!key)
-        return str.toUtf8();
-    next = key;
-    for (++skip_times; --skip_times; )
-        myrand();
-    QString s = str;
-    while (s.length() % 4)
-        s.append(' ');
-    QByteArray res(s.length() * 2, 0);
-    for (int i = 0; i < s.length() / 4; ++i) {
-        uint64_t word = 0;
-        for (int j = 0; j < 4; ++j)
-            word |= (uint64_t)(s[4 * i + j].unicode()) << (16 * j);
-        word ^= myrand();
-        for (int j = 0; j < 8; ++j)
-            res[8 * i + j] = (uint8_t)(word >> (8 * j));
-    }
-    return res;
+inline QString Cipher::decrypt(const QByteArray& s) {
+    const QByteArray& data = key.isEmpty() ? s : aes_cipher.removePadding(aes_cipher.decode(s, key));
+    return QString::fromUtf8(data);
 }
 
-QString decrypt(const QByteArray& s, uint64_t key) {
-    if (!key)
-        return QString::fromUtf8(s);
-    if (s.isEmpty())
-        return "";
-    next = key;
-    QString res;
-    res.resize(s.length() / 2);
-    for (int i = 0; i < res.length() / 4; ++i) {
-        uint64_t word = 0;
-        for (int j = 0; j < 8; ++j)
-            word |= (uint64_t)(s[8 * i + j] & 0xff) << (8 * j);
-        word ^= myrand();
-        for (int j = 0; j < 4; ++j)
-            res[4 * i + j] = (uint16_t)(word >> (16 * j));
-    }
-    int idx = res.length();
-    while (res[--idx] == ' ');
-    return res.mid(0, idx + 1);
+void Cipher::update_key(const QString& crypt_key) {
+    key = crypt_key.toUtf8();
+    key.resize((aes_type * 64 + 128) / 8, 0);
 }
 
 QString FileIo::read() {
@@ -56,35 +26,37 @@ QString FileIo::read() {
     file.open(QFile::ReadOnly);
     QByteArray content = file.readAll();
     file.close();
-    return buffer = decrypt(content, key);
+    return buffer = cipher.decrypt(content);
 }
 
 bool FileIo::write(const QString& text, bool rewrite_all) {
     QFile file(file_path);
     if (rewrite_all) {
         file.open(QFile::WriteOnly | QFile::Append);
-        file.write(encrypt(text, key));
+        file.write(cipher.encrypt(text));
     }
     else {
         int i = 0, original_size = buffer.size(), new_size = text.size();
         for (; i < qMin(new_size, original_size) && buffer[i] == text[i]; ++i);
         buffer.resize(i);
         buffer.append(text.mid(i));
-        if (i == new_size)
+        // special optimization for autosave performance, as most autosaves save nothing
+        if (i == new_size && original_size == new_size)
             return false;
-        i -= i % 4;
-        auto modified = encrypt(text.mid(i), key, i / 4);
+        constexpr int crypto_block_char_num = crypto_blocksize / char_size;
+        i -= i % crypto_block_char_num;
+        auto modified = cipher.encrypt(text.mid(i));
         file.open(QFile::WriteOnly | QFile::Append);
-        file.resize(i * 2);
-        file.seek(i * 2);
+        file.resize(i * char_size);
+        file.seek(i * char_size);
         file.write(modified);
     }
     file.close();
     return true;
 }
 
-void FileIo::update_key(uint64_t crypt_key) {
-    key = crypt_key;
+void FileIo::update_key(const QString& crypt_key) {
+    cipher.update_key(crypt_key);
     buffer.clear();
 }
 
@@ -104,7 +76,7 @@ MWSettings::MWSettings(const MainWindow* mw) : QSettings(const_cast<MainWindow*>
 }
 
 void MWSettings::save() {
-    const MainWindow* mw = static_cast<const MainWindow *>(parent());
+    const MainWindow* mw = static_cast<const MainWindow*>(parent());
     setValue("window_pos", QVariant::fromValue(mw->pos()));
     setValue("window_size", QVariant::fromValue(mw->size()));
     setValue("frameless", mw->windowFlags().testFlag(Qt::FramelessWindowHint));

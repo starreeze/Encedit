@@ -62,7 +62,10 @@ bool MWEventHandler::ctrl_key_handler(int key) {
 	switch (key) {
 		// reserved: ACDKSXZ
 	case Key_H:
-		QMessageBox::information(object, "shortcut help", help_text_full);
+		QMessageBox::information(object, "Shortcut Help", help_text_full);
+		return true;
+	case Key_E:
+		QMessageBox::information(object, "About", app_name + QString(" ") + version_string + '\n' + about_message);
 		return true;
 	case Key_S:
 		if (shift_pressed)
@@ -86,7 +89,7 @@ bool MWEventHandler::ctrl_key_handler(int key) {
 	}
 	case Key_R: {
 		bool ok;
-		QString regexp = QInputDialog::getText(object, "title regexp", QString("Enter an regexp to match titles in your passage for contents to display:"), QLineEdit::Normal, object->setting->value("title_regexp").toString(), &ok);
+		QString regexp = QInputDialog::getText(object, "Title Regexp", QString("Enter an regexp to match titles in your passage for contents to display:"), QLineEdit::Normal, object->setting->value("title_regexp").toString(), &ok);
 		if (ok) {
 			object->setting->setValue("title_regexp", regexp);
 			object->update_index(object->ui->textEdit->toPlainText(), regexp);
@@ -114,10 +117,10 @@ bool MWEventHandler::ctrl_key_handler(int key) {
 		object->show();
 		return true;
 	case Key_L: {
-		QColor selected = QColorDialog::getColor(black, object, "Font color");
+		QColor selected = QColorDialog::getColor(black, object, "Font Color");
 		if (selected.isValid()) {
 			object->setting->setValue("font_color", selected.rgb());
-			selected = QColorDialog::getColor(white, object, "Background color");
+			selected = QColorDialog::getColor(white, object, "Background Color");
 			if (selected.isValid()) {
 				object->setting->setValue("background_color", selected.rgb());
 				object->update_style();

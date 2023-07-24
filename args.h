@@ -9,7 +9,7 @@
 
 typedef const char* const LSTR;
 
-constexpr int default_text_fontsize = 18, contents_fontsize = 12, max_history_entry_num = 9, default_max_autosave_filesize_kb = 1024, default_autosave_interval_s = 60, statusbar_message_timeout_s = 0, cursor_recover_delay_ms = 100;
+constexpr int default_text_fontsize = 18, contents_fontsize = 12, max_history_entry_num = 9, default_max_autosave_filesize_kb = 1024, default_autosave_interval_s = 60, statusbar_message_timeout_s = 0, cursor_recover_delay_ms = 100, crypto_blocksize = 128, aes_type = 0, char_size = sizeof(QChar);
 LSTR default_text_fontname = "Microsoft YaHei";
 LSTR contents_fontname = "Consolas";
 LSTR autosave_filepath = ".autosave";
@@ -23,7 +23,7 @@ constexpr bool default_sidebar_status = true, default_frameless_status = false;
 
 LSTR org_name = "Xsy";
 LSTR app_name = "Encedit";
-LSTR version_string = "v2.6";
+LSTR version_string = "v3.0";
 
 // 2021.7.24 Sat <weather>
 LSTR default_title_regexp = "\\d{4}(\\.\\d{1,2}){2} \\w{3} .";
@@ -37,7 +37,13 @@ LSTR additional_welcome_message =
 "But don't worry if you can't remember;\n"
 "you can always press Ctrl-H to show this help.\n";
 
+LSTR about_message =
+"Project URL: github.com/starreeze/encedit\n"
+"This is free software. License: GPLv3\n"
+"Copyright (c) 2021~2023 by Starreeze";
+
 LSTR help_text_full =
+"Ctrl - E: about;\n"
 "Ctrl - <NUM>: open a recent file;\n"
 "Ctrl - Alt - <ARROW_KEY>: adjust window position;\n"
 "Ctrl - A: select all;\n"

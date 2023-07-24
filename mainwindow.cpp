@@ -87,15 +87,15 @@ void MainWindow::display(QString filepath, bool updateFilename) {
         on_actionNew_triggered();
         return;
     }
-    bool ok; QString password;
-    password = QInputDialog::getText(this, "password", QString("Password for document %1 (leave it blank if this is a plain text document):").arg(filepath), QLineEdit::Password, "", &ok);
+    bool ok = true; QString password;
+    if (filepath.endsWith(".enc"))
+        password = QInputDialog::getText(this, "password", QString("Password for document %1 (leave it blank if this is a plain text document):").arg(filepath), QLineEdit::Password, "", &ok);
     if (ok) {
         if (updateFilename)
             set_filename(filepath);
         std_file.file_path = filepath;
-        uint64_t key = password.toULong();
-        autosave_file.update_key(key);
-        std_file.update_key(key);
+        autosave_file.update_key(password);
+        std_file.update_key(password);
         QString text = std_file.read();
         ui->textEdit->setPlainText(text);
         int cursor_pos = history_list->get_entry(filepath).cursor;
@@ -159,7 +159,7 @@ void MainWindow::on_actionSave_As_triggered() {
             QString confirm_password, password;
             while (true) {
                 bool ok;
-                password = QInputDialog::getText(this, "password", QString("A digit password to encrypt document %1 (leave it blank if you don't want encryption):").arg(file), QLineEdit::Password, "", &ok);
+                password = QInputDialog::getText(this, "password", QString("A password to encrypt document %1 (leave it blank if you don't want encryption):").arg(file), QLineEdit::Password, "", &ok);
                 if (!ok)    return;
                 if (password.isEmpty())
                     break;
@@ -170,9 +170,8 @@ void MainWindow::on_actionSave_As_triggered() {
                 else
                     break;
             }
-            uint64_t key = password.toULong();
-            autosave_file.update_key(key);
-            std_file.update_key(key);
+            autosave_file.update_key(password);
+            std_file.update_key(password);
         }
         QFile _file(file);
         _file.open(QIODevice::WriteOnly);
@@ -255,8 +254,10 @@ void MainWindow::save_current(bool saveClean) {
     log("saving file to: " + std_file.file_path);
     set_dirty(false);
     update_index(ui->textEdit->toPlainText());
-    std_file.write(ui->textEdit->toPlainText(), saveClean);
-    log("file saved to: " + std_file.file_path);
+    if (std_file.write(ui->textEdit->toPlainText(), saveClean))
+        log("file saved to: " + std_file.file_path);
+    else
+        log("nothing to save.");
 }
 
 void MainWindow::update_index(const QString& text, const QString& regexp) {

@@ -4,7 +4,7 @@
 
 Encedit - a simple and elegant plain text editor: write down anything while secured by encryption!
 
-version 2.6, copyright (c) 2021~2023 by xsy, GPL v3 LICENSE.
+Version 3.0, copyright (c) 2021~2023 by Starreeze, GPL v3 LICENSE.
 
 ## Features
 
@@ -25,6 +25,7 @@ version 2.6, copyright (c) 2021~2023 by xsy, GPL v3 LICENSE.
 
 ## Keyboard shortcuts
 
+- Ctrl-E: about;
 - Ctrl-\<NUM\>: open a recent file;
 - Ctrl-H: show help on shortcuts;
 - Ctrl-Alt-\<ARROW_KEY\>: adjust window position;
@@ -74,14 +75,15 @@ Enjoy!
 
 ## Change log
 
-- v1.0: 2021.7.24 - basic encryption and UI
-- v1.1: 2021.7.25 - dirty indication, keyboard shortcut and cursor history
-- v1.2: 2021.7.28 - font size adjust and stronger encryption algorithm
-- v1.3: 2021.8.4 - enhanced encryption (from 16bit to 64bit) and improve UI
-- v2.0: 2022.1.9 - reorganize project with improved efficiency
-- v2.1: 2022.8.8 - font & index title customize; change status file path to system default
-- v2.2: 2022.8.12 - new feature: customize font color; optimization: automatic window layout adjust & remove icons and menus for full keyboard control
-- v2.3: 2022.8.23 - new feature: direct open mode w/o encryption; optimization: improve docs & inline welcome message
-- v2.4: 2022.9.9 - bugfix: 4+ bugs in v2.3; new feature: history list & manual window position minor adjust; optimization: improved custom config management
-- v2.5: 2023.7.17 - bugfix: 3+ bugs in v2.4; new feature: zoom & autosave; optimization: sidebar adjustable & typos in doc
-- v2.6: 2023.7.20 - bugfix: 2+ bugs in v2.5; new feature: statusbar; optimization: code reconstruction & typos in doc
+- v1.0: 2021.7.24 - FIRST VERSION: basic encryption and UI
+- v1.1: 2021.7.25 - **new feature**: dirty indication, keyboard shortcut and cursor history
+- v1.2: 2021.7.28 - **new feature**: font size adjust; **optimization**: stronger encryption algorithm
+- v1.3: 2021.8.4 - **optimization**: enhanced encryption (from 16bit to 64bit) and improve UI
+- v2.0: 2022.1.9 - **optimization**: reorganize project with improved efficiency
+- v2.1: 2022.8.8 - **new feature**: font & index title customize; **optimization**: change status file path to system default
+- v2.2: 2022.8.12 - **new feature**: customize font color; **optimization**: automatic window layout adjust & remove icons and menus for full keyboard control
+- v2.3: 2022.8.23 - **new feature**: direct open mode w/o encryption; **optimization**: improve docs & inline welcome message
+- v2.4: 2022.9.9 - **bugfix**: 4+ bugs in v2.3; **new feature**: history list & manual window position minor adjust; **optimization**: improved custom config management
+- v2.5: 2023.7.17 - **bugfix**: 3+ bugs in v2.4; **new feature**: zoom & autosave; **optimization**: sidebar adjustable & typos in doc
+- v2.6: 2023.7.20 - **bugfix**: 2+ bugs in v2.5; **new feature**: statusbar; **optimization**: code reconstruction & typos in doc
+- v3.0: 2023.7.24 - **bugfix**: 1 bug in v2.6; **new feature**: about page; **optimization**: encryption updated to AES-128 for better security

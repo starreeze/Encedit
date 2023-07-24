@@ -24,12 +24,11 @@ set(PROJECT_SOURCES
             io.h
             mweventhandler.h
             mweventhandler.cpp
-            # dialog.h
             indexmodel.cpp
             indexmodel.h
             mainwindow.ui
-            # historylist.h
-            # historylist.cpp
+            aes.h
+            aes.cpp
 )
 
 set(app_icon_resource_windows "")
