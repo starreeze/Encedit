@@ -9,11 +9,13 @@
 #include <QTimer>
 #include <QStandardItemModel>
 #include <QPlainTextEdit>
+// #include <QLocale>
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow), event_handler(new MWEventHandler(this)), setting(new MWSettings(this)) {
     ui->setupUi(this);
     history_list = new HistoryList(setting);
     ui->centralWidget->setLayout(ui->horizontalLayout);
+    // ui->textEdit->setLocale(QLocale::Chinese);
     move(setting->value("window_pos").value<QPoint>());
     const QSize& window_size = setting->value("window_size").value<QSize>();
     resize(window_size);

@@ -4,21 +4,24 @@
 #include <QStandardPaths>
 #include <QTimer>
 
-inline QByteArray Cipher::encrypt(const QString& s) {
-    const QByteArray& data = s.toUtf8();
-    if (key.isEmpty())
-        return data;
-    return aes_cipher.encode(data, key);
+#if ENCODING == utf-8
+constexpr auto encode_str = [](const QString& s) { return s.toUtf8();};
+constexpr auto decode_str = [](const QByteArray& s) { return QString::fromUtf8(s);};
+#endif
+
+inline QByteArray Cipher::encrypt(const QByteArray& s) {
+    return key.isEmpty() ? s : aes_cipher.encode(s, key);
 }
 
-inline QString Cipher::decrypt(const QByteArray& s) {
-    const QByteArray& data = key.isEmpty() ? s : aes_cipher.removePadding(aes_cipher.decode(s, key));
-    return QString::fromUtf8(data);
+inline QByteArray Cipher::decrypt(const QByteArray& s) {
+    return key.isEmpty() ? s : aes_cipher.removePadding(aes_cipher.decode(s, key));
 }
 
 void Cipher::update_key(const QString& crypt_key) {
-    key = crypt_key.toUtf8();
-    key.resize((aes_type * 64 + 128) / 8, 0);
+    constexpr int aes_size = (aes_type * 64 + 128) / 8;
+    key = encode_str(crypt_key);
+    auto append_size = aes_size - key.size();
+    key.append(append_size < 0 ? 0 : append_size, 0).resize(aes_size);
 }
 
 QString FileIo::read() {
@@ -26,29 +29,30 @@ QString FileIo::read() {
     file.open(QFile::ReadOnly);
     QByteArray content = file.readAll();
     file.close();
-    return buffer = cipher.decrypt(content);
+    buffer = cipher.decrypt(content);
+    return decode_str(buffer);
 }
 
 bool FileIo::write(const QString& text, bool rewrite_all) {
     QFile file(file_path);
+    QByteArray encoded = encode_str(text);
     if (rewrite_all) {
-        file.open(QFile::WriteOnly | QFile::Append);
-        file.write(cipher.encrypt(text));
+        file.open(QFile::WriteOnly);
+        file.write(cipher.encrypt(encoded));
     }
     else {
-        int i = 0, original_size = buffer.size(), new_size = text.size();
-        for (; i < qMin(new_size, original_size) && buffer[i] == text[i]; ++i);
+        int i = 0, original_size = buffer.size(), new_size = encoded.size();
+        for (; i < qMin(new_size, original_size) && buffer[i] == encoded[i]; ++i);
         buffer.resize(i);
-        buffer.append(text.mid(i));
+        buffer.append(encoded.mid(i));
         // special optimization for autosave performance, as most autosaves save nothing
         if (i == new_size && original_size == new_size)
             return false;
-        constexpr int crypto_block_char_num = crypto_blocksize / char_size;
-        i -= i % crypto_block_char_num;
-        auto modified = cipher.encrypt(text.mid(i));
+        i -= i % crypto_blocksize;
+        auto modified = cipher.encrypt(encoded.mid(i));
         file.open(QFile::WriteOnly | QFile::Append);
-        file.resize(i * char_size);
-        file.seek(i * char_size);
+        file.resize(i);
+        file.seek(i);
         file.write(modified);
     }
     file.close();

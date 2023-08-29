@@ -7,9 +7,11 @@
 #include <QSize>
 #include <QPoint>
 
+#define ENCODING utf-8
+
 typedef const char* const LSTR;
 
-constexpr int default_text_fontsize = 18, contents_fontsize = 12, max_history_entry_num = 9, default_max_autosave_filesize_kb = 1024, default_autosave_interval_s = 60, statusbar_message_timeout_s = 0, cursor_recover_delay_ms = 100, crypto_blocksize = 128, aes_type = 0, char_size = sizeof(QChar);
+constexpr int default_text_fontsize = 18, contents_fontsize = 12, max_history_entry_num = 9, default_max_autosave_filesize_kb = 1024, default_autosave_interval_s = 60, statusbar_message_timeout_s = 0, cursor_recover_delay_ms = 100, crypto_blocksize = 128, aes_type = 0;
 LSTR default_text_fontname = "Microsoft YaHei";
 LSTR contents_fontname = "Consolas";
 LSTR autosave_filepath = ".autosave";

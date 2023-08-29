@@ -20,15 +20,16 @@ class Cipher {
 public:
     inline Cipher() {}
     inline Cipher(const QString& crypt_key) { if (!crypt_key.isEmpty()) update_key(crypt_key); }
-    inline QByteArray encrypt(const QString& s);
-    inline QString decrypt(const QByteArray& s);
+    inline QByteArray encrypt(const QByteArray& s);
+    inline QByteArray decrypt(const QByteArray& s);
     void update_key(const QString& crypt_key);
 };
 
 class FileIo {
     Cipher cipher;
 public:
-    QString buffer, file_path;
+    QString file_path;
+    QByteArray buffer;
     FileIo() {}
     FileIo(const QString& crypt_key, const QString& filename) : file_path(filename), cipher(crypt_key) {}
     QString read();

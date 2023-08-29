@@ -4,7 +4,7 @@
 
 Encedit - a simple and elegant plain text editor: write down anything while secured by encryption!
 
-Version 3.0, copyright (c) 2021~2023 by Starreeze, GPL v3 LICENSE.
+Version 3.1, copyright (c) 2021~2023 by Starreeze, GPL v3 LICENSE.
 
 ## Features
 
@@ -73,6 +73,16 @@ In order to read novels when you're at work, follow the steps below:
 
 Enjoy!
 
+## Build
+
+### Linux
+In linux with fcitx input framework (e.g., Sougou Pinyin Input), Chinese input methods cannot be properly called. This is because `libfcitxplatforminputcontextplugin-qt6.so` is not shipped by default with the linux qt distribution. You need to compile beforehand.
+
+A complete install script (including the required input plugin) for Debian-based distribution is provided in `./build-linux.sh`. Run it to build.
+
+### Windows
+You are recommended to install the qt distribution from its official website. Then use qtcreator to compile this project. No plugin is needed.
+
 ## Change log
 
 - v1.0: 2021.7.24 - FIRST VERSION: basic encryption and UI
@@ -86,4 +96,5 @@ Enjoy!
 - v2.4: 2022.9.9 - **bugfix**: 4+ bugs in v2.3; **new feature**: history list & manual window position minor adjust; **optimization**: improved custom config management
 - v2.5: 2023.7.17 - **bugfix**: 3+ bugs in v2.4; **new feature**: zoom & autosave; **optimization**: sidebar adjustable & typos in doc
 - v2.6: 2023.7.20 - **bugfix**: 2+ bugs in v2.5; **new feature**: statusbar; **optimization**: code reconstruction & typos in doc
-- v3.0: 2023.7.24 - **bugfix**: 1 bug in v2.6; **new feature**: about page; **optimization**: encryption updated to AES-128 for better security
+- v3.0 [Unsafe version! Bug can cause data loss]: 2023.7.24 - **bugfix**: 1 bug in v2.6; **new feature**: about page; **optimization**: encryption updated to AES-128 for better security & updated to qt6
+- v3.1: 2023.7.24 - **bugfix**: 2 fatal bugs in v3.0

@@ -1,97 +1,97 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>16</width>
-    <height>16</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>EncEdit</string>
-  </property>
-  <widget class="QWidget" name="centralWidget">
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>2</width>
-      <height>2</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <property name="spacing">
-      <number>0</number>
-     </property>
-     <property name="sizeConstraint">
-      <enum>QLayout::SetMaximumSize</enum>
-     </property>
-    </layout>
-   </widget>
-   <widget class="QListWidget" name="listWidget">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>256</width>
-      <height>192</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>1</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="maximumSize">
-     <size>
-      <width>16777215</width>
-      <height>16777215</height>
-     </size>
-    </property>
-    <property name="editTriggers">
-     <set>QAbstractItemView::NoEditTriggers</set>
-    </property>
-    <property name="showDropIndicator" stdset="0">
-     <bool>false</bool>
-    </property>
-    <property name="uniformItemSizes">
-     <bool>true</bool>
-    </property>
-    <property name="itemAlignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QPlainTextEdit" name="textEdit">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>256</width>
-      <height>192</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>6</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QStatusBar" name="statusBar"/>
- </widget>
- <layoutdefault spacing="6" margin="11"/>
- <resources/>
- <connections/>
+    <class>MainWindow</class>
+    <widget class="QMainWindow" name="MainWindow">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>16</width>
+                <height>16</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>EncEdit</string>
+        </property>
+        <widget class="QWidget" name="centralWidget">
+            <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                </sizepolicy>
+            </property>
+            <widget class="QWidget" name="layoutWidget">
+                <property name="geometry">
+                    <rect>
+                        <x>0</x>
+                        <y>0</y>
+                        <width>2</width>
+                        <height>2</height>
+                    </rect>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayout">
+                    <property name="spacing">
+                        <number>0</number>
+                    </property>
+                    <property name="sizeConstraint">
+                        <enum>QLayout::SetMaximumSize</enum>
+                    </property>
+                </layout>
+            </widget>
+            <widget class="QListWidget" name="listWidget">
+                <property name="geometry">
+                    <rect>
+                        <x>0</x>
+                        <y>0</y>
+                        <width>256</width>
+                        <height>192</height>
+                    </rect>
+                </property>
+                <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <horstretch>1</horstretch>
+                        <verstretch>0</verstretch>
+                    </sizepolicy>
+                </property>
+                <property name="maximumSize">
+                    <size>
+                        <width>16777215</width>
+                        <height>16777215</height>
+                    </size>
+                </property>
+                <property name="editTriggers">
+                    <set>QAbstractItemView::NoEditTriggers</set>
+                </property>
+                <property name="showDropIndicator" stdset="0">
+                    <bool>false</bool>
+                </property>
+                <property name="uniformItemSizes">
+                    <bool>true</bool>
+                </property>
+                <property name="itemAlignment">
+                    <set>Qt::AlignCenter</set>
+                </property>
+            </widget>
+            <widget class="QPlainTextEdit" name="textEdit">
+                <property name="geometry">
+                    <rect>
+                        <x>0</x>
+                        <y>0</y>
+                        <width>256</width>
+                        <height>192</height>
+                    </rect>
+                </property>
+                <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <horstretch>6</horstretch>
+                        <verstretch>0</verstretch>
+                    </sizepolicy>
+                </property>
+            </widget>
+        </widget>
+        <widget class="QStatusBar" name="statusBar" />
+    </widget>
+    <layoutdefault spacing="6" margin="11" />
+    <resources />
+    <connections />
 </ui>
